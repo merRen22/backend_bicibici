@@ -1,4 +1,4 @@
-service: lambdasBicibici
+service: backend_bb
 
 provider:
   name: aws
@@ -9,4 +9,8 @@ functions:
     handler: handler.checkMovement
     events:
       - iot:
+          name: ${file(./config.json):IoT_Name}
           sql: ${file(./config.json):IoT_topic}
+          description: ${file(./config.json):IoT_Description}
+          enabled: true
+          sqlVersion: ${file(./config.json):IoT_Version}
