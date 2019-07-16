@@ -3,6 +3,9 @@ service: backend
 provider:
   name: aws
   runtime: nodejs10.x
+  deploymentBucket:
+    name: backend
+  deploymentPrefix: bicibici
 
 functions:
   verificar_movimiento_bicicleta:
