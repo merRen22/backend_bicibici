@@ -52,6 +52,14 @@ Explain what these tests test and why
 Give an example
 ```
 
+### Configuration of services "config.json"
+
+```
+{
+    "IoT_topic":"aws iot policy"
+}
+```
+
 ## Deployment
 
 Add additional notes about how to deploy this on a live system

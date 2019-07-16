@@ -9,4 +9,4 @@ functions:
     handler: handler.checkMovement
     events:
       - iot:
-          sql: "SELECT * FROM 'some_topic'"
+          sql: ${file(./config.json):IoT_topic}
