@@ -1,4 +1,4 @@
-service: lambdas_bicibici
+service: lambdasBicibici
 
 provider:
   name: aws
