@@ -1,4 +1,4 @@
-service: backend_bb
+service: backend
 
 provider:
   name: aws
