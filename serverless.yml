@@ -5,5 +5,8 @@ provider:
   runtime: nodejs10.x
 
 functions:
-  hello:
-    handler: handler.hello
+  verificar_movimiento_bicicleta:
+    handler: handler.checkMovement
+    events:
+      - iot:
+          sql: "SELECT * FROM 'some_topic'"
