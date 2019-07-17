@@ -1,10 +1,14 @@
 service: backend
 
+plugins:
+  - serverless-plugin-include-dependencies
+  - serverless-offline
+
 provider:
   name: aws
   runtime: nodejs10.x
   deploymentBucket:
-    name: backend
+    name: ${file(./config.json):S3_bucketName}
   deploymentPrefix: bicibici
 
 functions:

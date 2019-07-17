@@ -1,0 +1,27 @@
+{
+  "name": "lambda",
+  "version": "1.0.0",
+  "description": "backend app bicibici using AWS services (Lambda, DynamoDB). This project offers cloud services access to a mobile project.",
+  "main": "handler.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/merRen22/backend_bicibici.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/merRen22/backend_bicibici/issues"
+  },
+  "homepage": "https://github.com/merRen22/backend_bicibici#readme",
+  "dependencies": {
+    "aws-sdk": "^2.493.0",
+    "express": "^4.17.1",
+    "serverless-http": "^2.0.2",
+    "serverless-offline": "^5.7.3",
+    "serverless-plugin-include-dependencies": "^3.2.1"
+  }
+}
