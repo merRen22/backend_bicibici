@@ -1,18 +1,36 @@
 'use strict';
-const dynamodb = require('./dynamodb');
+const serverless = require('serverless-http');
+const express = require('express');
+const AWS = require('aws-sdk');
+const bodyParser = require('body-parser');
 
-module.exports.verificar_movimiento = async (event, context, callback) => {
+const app = express();
+
+const bikes_table = process.env.TABLE_BIKES;
+const IS_OFFLINE = process.env.IS_OFFLINE;
+let dynamoDB;
+
+if (IS_OFFLINE) {
+    dynamoDB = new AWS.DynamoDB.DocumentClient({
+        region: 'localhost',
+        endpoint: 'http://localhost:8000'
+    });
+} else {
+    dynamoDB = new AWS.DynamoDB.DocumentClient();
+}
+
+app.use(bodyParser.json());
+
+app.verificar_movimiento = async (req, res) => {
 
     var params = {
         Key: {
-            "bicycleID": {
-                N: json.bicycleID.toString()
-            },
+            "bicycleID": { N: req.body.bicycleID },
         },
-        TableName: "Bicycle"
+        TableName: bikes_table
     };
 
-    const scan = await ddb.getItem(params).promise()
+    const scan = await dynamoDB.getItem(params).promise()
 
     var bike = new Bike(
         scan.Item.bicycleID.N,
@@ -22,28 +40,34 @@ module.exports.verificar_movimiento = async (event, context, callback) => {
         scan.Item.IsMoving.N,
         scan.Item.Latitude.N);
 
-    if (bike.Available == 0 && json.ismoving == 1) {
+    if (bike.Available == 0 && req.body.ismoving == 1) {
         console.log("The bycicle with ID " + bike.bicycleID.toString() + " has been stolen :'v");
-        callback(null, { body: JSON.stringify({ message: "Call to Police 🚨 🚨 🚨" }) });
+        return res.status(400).json({
+            error: "Call to Police 🚨 🚨 🚨"
+        });
     } else {
-
         var paramsUpdate = {
             TableName: "Bike",
             Item: {
                 'IsIntervened': { N: bike.IsIntervened },
-                'Id': { N: json.id.toString() },
-                'Longuitude': { N: json.longuitude.toString() },
+                'Id': { N: req.body.bicycleID.toString() },
+                'Longuitude': { N: req.body.longuitude.toString() },
                 'Available': { N: bike.Available },
                 'IsMoving': { N: bike.IsMoving },
-                'Latitude': { N: json.latitude.toString() }
+                'Latitude': { N: req.body.latitude.toString() }
             }
         };
 
-        await ddb.putItem(paramsUpdate, function (err, data) {
+        await dynamoDB.putItem(paramsUpdate, function (err, data) {
             if (err) {
-                callback(null, { body: JSON.stringify({ message: "Error al realizar el update 😢 " }) });
+                return res.status(400).json({
+                    error: "Error al realizar el update 😢 "
+                });
             } else {
-                callback(null, { body: JSON.stringify({ message: "Se actualizo con exito el registro crack 😄 " }) });
+                res.json({
+                    sucess: true,
+                    message: "Se actualizo con exito el registro crack 😄 "
+                });
             }
         }).promise();
     }
