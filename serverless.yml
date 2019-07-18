@@ -27,7 +27,7 @@ provider:
 
 functions:
   verificar_movimiento_bicicleta:
-    handler: bicycleFunctions.verificar_movimiento.verificar_movimiento
+    handler: bicycleFunctions/verificar_movimiento.verificar_movimiento
     events:
       - iot:
           name: ${file(./config.json):IoT_Name}

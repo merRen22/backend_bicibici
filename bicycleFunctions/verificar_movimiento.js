@@ -21,11 +21,20 @@ if (IS_OFFLINE) {
 
 app.use(bodyParser.json());
 
-app.verificar_movimiento = async (req, res) => {
+app.get = ('/', async (req, res) => {
+
+    console.log(req.toString());
+
+    const {
+        BicycleID,
+        Longuitude,
+        Latitude,
+        IsMoving
+    } = req.body;
 
     var params = {
         Key: {
-            "bicycleID": { N: req.body.bicycleID },
+            "BicycleID": { N: bicycleID },
         },
         TableName: bikes_table
     };
@@ -40,7 +49,7 @@ app.verificar_movimiento = async (req, res) => {
         scan.Item.IsMoving.N,
         scan.Item.Latitude.N);
 
-    if (bike.Available == 0 && req.body.ismoving == 1) {
+    if (bike.Available == 0 && IsMoving == 1) {
         console.log("The bycicle with ID " + bike.bicycleID.toString() + " has been stolen :'v");
         return res.status(400).json({
             error: "Call to Police 🚨 🚨 🚨"
@@ -50,11 +59,11 @@ app.verificar_movimiento = async (req, res) => {
             TableName: "Bike",
             Item: {
                 'IsIntervened': { N: bike.IsIntervened },
-                'Id': { N: req.body.bicycleID.toString() },
-                'Longuitude': { N: req.body.longuitude.toString() },
+                'BicycleID': { N: BicycleID.toString() },
+                'Longuitude': { N: Longuitude.toString() },
                 'Available': { N: bike.Available },
                 'IsMoving': { N: bike.IsMoving },
-                'Latitude': { N: req.body.latitude.toString() }
+                'Latitude': { N: Latitude.toString() }
             }
         };
 
@@ -71,4 +80,6 @@ app.verificar_movimiento = async (req, res) => {
             }
         }).promise();
     }
-};
+});
+
+module.exports.verificar_movimiento = serverless(app);
