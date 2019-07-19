@@ -44,11 +44,11 @@ resources:
       Properties:
         AttributeDefinitions:
           -
-            AttributeName: bicycleID
+            AttributeName: BicycleID
             AttributeType: N
         KeySchema:
           -
-            AttributeName: bicycleID
+            AttributeName: BicycleID
             KeyType: HASH
         ProvisionedThroughput:
           ReadCapacityUnits: 1
