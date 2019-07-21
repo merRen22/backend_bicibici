@@ -12,6 +12,8 @@ provider:
   deploymentPrefix: bicibici
   environment:
     TABLE_BIKES: ${file(./config.json):DB_Bikes}
+    TABLE_PLANS: ${file(./config.json):DB_Plans}
+    TABLE_STATIONS: ${file(./config.json):DB_Stations}
   iamRoleStatements:
     - Effect: Allow
       Action:
@@ -22,9 +24,10 @@ provider:
         - dynamodb:UpdateItem
         - dynamodb:DeleteItem
       Resource: 
-        - {"Fn::GetAtt": ["BikeDynamoDBTable", "Arn" ]}
-
-
+        - {"Fn::GetAtt": ["BikeDynamoDBTable", "Arn"],}
+        - {"Fn::GetAtt": ["PlansDynamoDBTable", "Arn"],}
+        - {"Fn::GetAtt": ["StationsDynamoDBTable", "Arn"],}
+        
 functions:
   verificar_movimiento_bicicleta:
     handler: bicycleFunctions/verificar_movimiento.verificar_movimiento
@@ -35,6 +38,18 @@ functions:
           description: ${file(./config.json):IoT_Description}
           enabled: true
           sqlVersion: ${file(./config.json):IoT_Version}
+  
+  obtener_planes_usuarios:
+    handler: userFunctions/obtener_planes.obtener_planes
+    events:
+      - http: ANY /
+      - http: ANY {proxy+}
+  
+  obtener_informacion_estaciones:
+    handler: userFunctions/informacion_estaciones.informacion_estaciones
+    events:
+      - http: ANY /
+      - http: ANY {proxy+}
 
 resources:
   Resources:
@@ -54,3 +69,37 @@ resources:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
         TableName: ${self:provider.environment.TABLE_BIKES}
+    
+    PlansDynamoDBTable:
+      Type: 'AWS::DynamoDB::Table'
+      DeletionPolicy: Delete
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: PlanID
+            AttributeType: N
+        KeySchema:
+          -
+            AttributeName: PlanID
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: ${self:provider.environment.TABLE_PLANS}
+    
+    StationsDynamoDBTable:
+      Type: 'AWS::DynamoDB::Table'
+      DeletionPolicy: Delete
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: StationID
+            AttributeType: N
+        KeySchema:
+          -
+            AttributeName: StationID
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: ${self:provider.environment.TABLE_STATIONS}
