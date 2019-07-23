@@ -42,14 +42,23 @@ functions:
   obtener_planes_usuarios:
     handler: userFunctions/obtener_planes.obtener_planes
     events:
-      - http: ANY /
-      - http: ANY {proxy+}
+      - http:
+          path: planes
+          method: ANY
   
   obtener_informacion_estaciones:
     handler: userFunctions/informacion_estaciones.informacion_estaciones
     events:
-      - http: ANY /
-      - http: ANY {proxy+}
+      - http: 
+          path: estacion
+          method: ANY
+  
+  obtener_estacionamientos_cercanos:
+    handler: userFunctions/estacionamientos_cercanos.estacionamientos_cercanos
+    events:
+      - http:
+          path: estaciones
+          method: ANY
 
 resources:
   Resources:

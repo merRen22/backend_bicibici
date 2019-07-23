@@ -22,7 +22,7 @@ if(IS_OFFLINE){
 
 app.use(bodyParser.json({string: false}));
 
-app.get('/', (req, res) => {
+app.get('/planes', (req, res) => {
   const params = {
     TableName: TABLE_PLANS
   };

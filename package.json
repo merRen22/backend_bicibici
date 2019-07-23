@@ -20,6 +20,7 @@
   "dependencies": {
     "aws-sdk": "^2.493.0",
     "express": "^4.17.1",
+    "geolib": "^3.0.4",
     "serverless-http": "^2.0.2",
     "serverless-offline": "^5.7.3",
     "serverless-plugin-include-dependencies": "^3.2.1"

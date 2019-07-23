@@ -22,26 +22,31 @@ if(IS_OFFLINE){
 
 app.use(bodyParser.json({string: false}));
 
-app.get('/', (req, res) => {
+app.post('/estacion', (req, res) => {
+  const json = JSON.parse(JSON.stringify(req.body));
+
   const params = {
+    Key: {
+      StationID: json.StationID, 
+        }, 
     TableName: TABLE_STATIONS
   };
 
-  dynamoDB.scan(params,(error,result)=>{
+  dynamoDB.get(params,(error,result)=>{
     if(error){
       console.log(error);
       res.status(400).json({
-        error: 'No se ha podido acceder a las estaciones'
+        error: 'No se ha podido acceder a la estación'
       })
     }else{
-      const {Items} = result;
       res.json({
         sucess: true,
-        message: 'Estaciones listas',
-        plans: Items
+        message: 'Estación lista',
+        plans: result.Item
       });
     }
   });
+
 });
 
 module.exports.informacion_estaciones = serverless(app);
