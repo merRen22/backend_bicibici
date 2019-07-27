@@ -72,9 +72,14 @@ functions:
   registrar_usuario:
     handler: userFunctions/registrar_usuario.registrar_usuario
     events:
-      - cognitoUserPool:
-          pool: ${file(./config.json):Cognito_pool}
-          trigger: PreSignUp
+
+      #need manual configuration
+      #ref forr names https://docs.aws.amazon.com/es_es/cognito-user-identity-pools/latest/APIReference/API_LambdaConfigType.html
+      #- cognitoUserPool:
+          #pool: ${file(./config.json):Cognito_pool}
+          #trigger: PostAuthentication
+          #existing: true
+          #https://medium.com/@Da_vidgf/using-cognito-for-users-management-in-your-serverless-application-1695fec9e225
 
 resources:
   Resources:
