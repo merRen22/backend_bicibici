@@ -9,8 +9,6 @@ exports.registrar_usuario = async function(event, context, callback){
 
     //Only trigger when user has confirmed his email and singup in cognito
     //CognitTrigger :: PostAuthentication
-    if(event.eventType === 'SignUp'){
-
     console.log("Correo de usuario " + event.request.userAttributes.email);
     var params = {
         TableName: TABLE_USERS,
@@ -27,18 +25,15 @@ exports.registrar_usuario = async function(event, context, callback){
     */
     
     // Call DynamoDB to add the item to the table
-    console.log("antes de crear usuario");
     await ddb.putItem(params, function(err, data) {
         if (err) {
             console.log("Error" + err);
             //callback(null,{body: JSON.stringify({ message: "No se ha podido crear al usuario" })});
             //context.done()
         } else {
-            console.log("Successs ?????");
+            console.log("Usuario creado con exito");
         }
     });
-
-    }
     
     callback(null, event);
 

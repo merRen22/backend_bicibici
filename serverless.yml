@@ -74,10 +74,10 @@ functions:
     events:
 
       #need manual configuration
-      #ref forr names https://docs.aws.amazon.com/es_es/cognito-user-identity-pools/latest/APIReference/API_LambdaConfigType.html
+      #ref forr names https://docs.aws.amazon.com/es_es/amazondynamodb/latest/developerguide/HowItWorks.NamingRulesDataTypes.html
       #- cognitoUserPool:
           #pool: ${file(./config.json):Cognito_pool}
-          #trigger: PostAuthentication
+          #trigger: PostConfirmation
           #existing: true
           #https://medium.com/@Da_vidgf/using-cognito-for-users-management-in-your-serverless-application-1695fec9e225
 
