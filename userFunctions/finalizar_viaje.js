@@ -24,74 +24,84 @@ if(IS_OFFLINE){
 
 app.use(bodyParser.json({string: false}));
 
-app.post('/desbloquearBicicleta',async (req, res,next) => {
-    var available;
-    var isIntervened;
+app.post('/finalizar_viaje',async (req, res,next) => {
     var today = new Date();
+    var bikeUpdate = false;
 
     //UPDATE BIKE STATUS
     const json = JSON.parse(JSON.stringify(req.body));
     
-    const paramsGet = {
-      Key: {
-        BicycleID: json.BicycleID
-        }, 
-        TableName: TABLE_BIKES
-        };
+    const paramsPutBike = {
+        Item: {
+          BicycleID: {"N": json.BicycleID.toString()},
+          Available: {"N": "1"}
+          }, 
+          TableName: TABLE_BIKES
+          };
 
-    //GET BIKE TO CHECK AVAILABILITY
-    await dynamoDB.get(paramsGet,(error,result)=>{
+    await ddb.putItem(paramsPutBike,function(error,data){
       if(error){
         console.log(error);
         res.status(400).json({
-        error: 'No se ha podido acceder a la estación'
+        error: 'No se ha podido actualizar el estado de la bicicelta intentelo nuevamente'
         })
         }
         else{
-          available = result.Item.Available;
-          isIntervened = result.Item.IsIntervened;
+            bikeUpdate = true;
       }}).promise();
-
-    if(available == 0 || isIntervened != 0){
-      res.status(400).json({
-        error: 'Esta bicicleta no se encuentra disponible actualmente'
-        })
-    }else{
-      //CREATE TRIP FOR USER
-      //  [Date_time start,Date_time end,bike_id]
+      
+      if(bikeUpdate){
       var _date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate() + "|" + today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds()
 
+      
+      const paramsgetUser = {
+        Key: {
+            Email: json.Email
+          }, 
+          TableName: TABLE_USERS
+          };
+
+    
+          /*
+    var jsonUser = await dynamoDB.get(paramsgetUser);
+    console.log(jsonUser);
+    */
+
+   console.log("Email :: " + json.Email);
       const paramsPutUser = {
         TableName: TABLE_USERS,
-        Item: {
+        Key: {
           Email: {"S": json.Email} ,
-          Trips: {"M": 
-          {
-            [_date] :{
-          "SS":[
+        },
+        UpdateExpression: 'SET Trips.#Trips =:StringSet',
+        ExpressionAttributeNames: {
+            "#Trips":{
+                "S":"2019-8-1|1:20:49"
+            }
+        },
+        ExpressionAttributeValues: {
+        ':StringSet': {"SS":[
             json.BicycleID.toString(),
-            "none",
-          ]
-          }
-        }
-      }
-      }
+            _date,
+          ]},
+    }
     };
+    
 
-      //UPDATE USER REGISTRATION
-      await ddb.putItem(paramsPutUser, function(error,data) {
+      //UPDATE USER TRIPS
+      await dynamoDB.update(paramsPutUser, function(error,data) {
         if (error) {
           console.log(error);
           res.status(400).json({
-          error: 'No se ha podido crear el usuario'
+          error: 'No se ha podido cerrar el viaje siga intentando por favor'
         })
       } else {
         res.status(200).json({
-        message: 'Se registro con exito el nuevo viaje'
+        message: 'Se dio por finalizado el viaje exitosamente'
       })
       }
       }).promise();
     }
 });
 
-module.exports.desbloquear_bicicleta = serverless(app);
+module.exports.finalizar_viaje = serverless(app);

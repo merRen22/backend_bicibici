@@ -68,7 +68,14 @@ functions:
       - http:
           path: desbloquearBicicleta
           method: ANY
-  
+
+  finalizar_viaje:
+    handler: userFunctions/finalizar_viaje.finalizar_viaje
+    events:
+      - http:
+          path: finalizar_viaje
+          method: ANY
+
   registrar_usuario:
     handler: userFunctions/registrar_usuario.registrar_usuario
     events:
