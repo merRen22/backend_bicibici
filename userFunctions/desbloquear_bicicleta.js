@@ -68,9 +68,9 @@ app.post('/desbloquearBicicleta',async (req, res,next) => {
           Trips: {"M": 
           {
             [_date] :{
-          "SS":[
-            json.BicycleID.toString(),
-            "none",
+          "L":[
+            {"N": json.BicycleID },
+            {"S": "none"},
           ]
           }
         }
