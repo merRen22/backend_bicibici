@@ -81,8 +81,8 @@ app.post('/finalizar_viaje',async (req, res,next) => {
         },
         ExpressionAttributeValues: {
         ':StringSet': {"SS":[
-            json.BicycleID.toString(),
-            _date,
+          json.BicycleID,
+          "2019-8-1|1:20:49",
           ]},
     }
     };
