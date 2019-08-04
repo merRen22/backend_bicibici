@@ -6,7 +6,6 @@ const bodyParser = require('body-parser');
 
 var AWS = require('aws-sdk');
 AWS.config.update({ region: 'us-east-1' });
-var ddb = new AWS.DynamoDB({ apiVersion: '2012-08-10' });
 
 const TABLE_BIKES = process.env.TABLE_BIKES;
 const TABLE_USERS = process.env.TABLE_USERS;
@@ -32,14 +31,20 @@ app.post('/finalizar_viaje', async (req, res, next) => {
   const json = JSON.parse(JSON.stringify(req.body));
 
   const paramsPutBike = {
-    Item: {
-      BicycleID: { "N": json.BicycleID.toString() },
-      Available: { "N": "1" }
+    TableName: TABLE_BIKES,
+    Key: {
+      BicycleID: json.BicycleID
+      },
+    UpdateExpression: 'SET #row =:Status ',
+    ExpressionAttributeNames: {
+      '#row': 'Available',
     },
-    TableName: TABLE_BIKES
+    ExpressionAttributeValues: {
+      ':Status': 1,
+    }
   };
 
-  await ddb.putItem(paramsPutBike, function (error, data) {
+  await dynamoDB.update(paramsPutBike, function (error, data) {
     if (error) {
       console.log(error);
       res.status(400).json({
@@ -93,7 +98,6 @@ app.post('/finalizar_viaje', async (req, res, next) => {
           ],
         }
       };
-
 
       //UPDATE USER TRIPS
       await dynamoDB.update(paramsPutUser, function (error, data) {
