@@ -75,6 +75,20 @@ functions:
       - http:
           path: finalizar_viaje
           method: ANY
+  
+  registrar_pago:
+    handler: userFunctions/registrar_pago.registrar_pago
+    events:
+      - http:
+          path: registrar_pago
+          method: ANY
+  
+  calcular_datos:
+    handler: userFunctions/calcular_datos.calcular_datos
+    events:
+      - http:
+          path: calcular_datos
+          method: ANY
 
   registrar_usuario:
     handler: userFunctions/registrar_usuario.registrar_usuario

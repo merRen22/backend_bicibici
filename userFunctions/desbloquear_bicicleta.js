@@ -75,7 +75,7 @@ app.post('/desbloquearBicicleta', async (req, res, next) => {
   } else {
     //CREATE TRIP FOR USER
     //  [Date_time start,Date_time end,bike_id]
-    var _date = today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate() + "|" + today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds()
+    var _date = today.getFullYear() + '-' + (today.getMonth()) + '-' + today.getDate() + "|" + today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds()
 
     const paramsPutUser = {
       TableName: TABLE_USERS,

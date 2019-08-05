@@ -13,7 +13,9 @@ exports.registrar_usuario = async function(event, context, callback){
     var params = {
         TableName: TABLE_USERS,
         Item: {
-            'Email' : {S: event.request.userAttributes.email}
+            'Email' : {S: event.request.userAttributes.email},
+            'Trips': {M: {}},
+            'Payments': {M: {}}
         }
     };
 
