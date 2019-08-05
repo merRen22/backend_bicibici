@@ -15,6 +15,7 @@ provider:
     TABLE_PLANS: ${file(./config.json):DB_Plans}
     TABLE_STATIONS: ${file(./config.json):DB_Stations}
     TABLE_USERS: ${file(./config.json):DB_User}
+    TABLE_REPORT: ${file(./config.json):DB_Report}
   iamRoleStatements:
     - Effect: Allow
       Action:
@@ -171,3 +172,20 @@ resources:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
         TableName: ${self:provider.environment.TABLE_USERS}
+    
+    UsersDynamoDBTable:
+      Type: 'AWS::DynamoDB::Table'
+      DeletionPolicy: Delete
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: ReportDate
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: ReportDate
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: ${self:provider.environment.TABLE_REPORT}
