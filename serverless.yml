@@ -30,6 +30,7 @@ provider:
         - {"Fn::GetAtt": ["PlansDynamoDBTable", "Arn"],}
         - {"Fn::GetAtt": ["StationsDynamoDBTable", "Arn"],}
         - {"Fn::GetAtt": ["UsersDynamoDBTable", "Arn"],}
+        - {"Fn::GetAtt": ["ReportDynamoDBTable", "Arn"],}
         
 functions:
   verificar_movimiento_bicicleta:
@@ -47,6 +48,14 @@ functions:
     events:
       - http:
           path: planes
+          method: ANY
+          
+  revisar_planes_usuarios:
+    handler: cloudWatchFunctions/revisar_planes.revisar_planes
+    events:
+      - schedule: rate(2 hours)
+      - http:
+          path: revisar_planes
           method: ANY
   
   obtener_informacion_estaciones:
@@ -89,6 +98,13 @@ functions:
     events:
       - http:
           path: calcular_datos
+          method: ANY
+  
+  reportar_bicicleta:
+    handler: userFunctions/reportar_bicicleta.reportar_bicicleta
+    events:
+      - http:
+          path: reportar_bicicleta
           method: ANY
 
   registrar_usuario:
@@ -173,7 +189,7 @@ resources:
           WriteCapacityUnits: 1
         TableName: ${self:provider.environment.TABLE_USERS}
     
-    UsersDynamoDBTable:
+    ReportDynamoDBTable:
       Type: 'AWS::DynamoDB::Table'
       DeletionPolicy: Delete
       Properties:
