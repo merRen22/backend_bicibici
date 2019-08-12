@@ -91,6 +91,8 @@ app.post('/desbloquearBicicleta', async (req, res, next) => {
         ':StringSet': [
           json.BicycleID,
           "none",
+          json.Ubicacion,
+          "empty"
         ],
       }
     };

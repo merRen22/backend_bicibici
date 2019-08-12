@@ -15,7 +15,8 @@ exports.registrar_usuario = async function(event, context, callback){
         Item: {
             'Email' : {S: event.request.userAttributes.email},
             'Trips': {M: {}},
-            'Payments': {M: {}}
+            'Payments': {M: {}},
+            'Activo':{N: 0},
         }
     };
 

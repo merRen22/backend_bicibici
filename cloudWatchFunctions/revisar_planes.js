@@ -60,12 +60,7 @@ exports.revisar_planes = async function (event, context, callback) {
       var values = Object.entries(users[i].Payments)[0].toString().split(',');
       var days = dateDiffInDays(new Date(values[3]),new Date(_date));
 
-      console.log(new Date(values[3]));
-      console.log(new Date(_date));
-
       if(users[i].Activo == 1 && days == 0){
-        console.log("Paso la validacion");
-
         const paramsUpdate = {
           TableName: TABLE_USERS,
           Key: {
@@ -83,12 +78,8 @@ exports.revisar_planes = async function (event, context, callback) {
         await dynamoDB.update(paramsUpdate, function (error, result) {
           if (error) {
             console.log("No se pudo actualzar el estado del usuario " + users[i].Email);
-          }else{
-            console.log("Cumlpiop con el cambio");
           }
         }).promise();
-      }else{
-        console.log("No Paso la validacion");
       }
     }
   }

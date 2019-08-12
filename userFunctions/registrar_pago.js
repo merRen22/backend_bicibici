@@ -37,10 +37,11 @@ app.post('/registrar_pago', async (req, res, next) => {
     Key: {
         Email: json.Email
     },
-    UpdateExpression: 'SET #mapName.#Payment =:StringSet',
+    UpdateExpression: 'SET #mapName.#Payment =:StringSet, #attr = :NumberValue ',
     ExpressionAttributeNames: {
       '#mapName': 'Payments',
-      '#Payment': _date
+      '#Payment': _date,
+      '#attr': 'Activo'
     },
     ExpressionAttributeValues: {
       ':StringSet': [
@@ -48,6 +49,7 @@ app.post('/registrar_pago', async (req, res, next) => {
         json.Amount.toString(),
         _dateEnd
       ],
+      ':NumberValue': 1
     }
   };
 

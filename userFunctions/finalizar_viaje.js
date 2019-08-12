@@ -67,6 +67,8 @@ app.post('/finalizar_viaje', async (req, res, next) => {
     };
 
     var fecha_inicio = "";
+    var ubicacionInicio = "";
+    var values;
     await dynamoDB.get(paramsgetUser, (error, result) => {
       if (error) {
         console.log(error);
@@ -76,6 +78,8 @@ app.post('/finalizar_viaje', async (req, res, next) => {
       }
       else {
         fecha_inicio = Object.keys(result.Item.Trips)[Object.keys(result.Item.Trips).length - 1];
+        values = Object.entries(result.Item.Trips)[Object.keys(result.Item.Trips).length - 1].toString().split(',');
+        ubicacionInicio = values[3];
       }
     }).promise();
 
@@ -95,6 +99,8 @@ app.post('/finalizar_viaje', async (req, res, next) => {
           ':StringSet': [
             json.BicycleID,
             _date,
+            parseInt(ubicacionInicio,10),
+            json.Ubicacion
           ],
         }
       };
