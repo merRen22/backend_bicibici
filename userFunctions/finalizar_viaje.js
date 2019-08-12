@@ -57,7 +57,7 @@ app.post('/finalizar_viaje', async (req, res, next) => {
   }).promise();
 
   if (bikeUpdate) {
-    var _date = today.getFullYear() + '-' + (today.getMonth()) + '-' + today.getDate() + "|" + today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds()
+    var _date = today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate() + "|" + today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds()
 
     const paramsgetUser = {
       Key: {

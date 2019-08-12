@@ -15,6 +15,8 @@ if (IS_OFFLINE) {
   dynamoDB = new AWS.DynamoDB.DocumentClient();
 }
 
+const _MS_PER_DAY = 1000 * 60 * 60 * 24;
+
 function dateDiffInDays(a, b) {
   const utc1 = Date.UTC(a.getFullYear(), a.getMonth(), a.getDate());
   const utc2 = Date.UTC(b.getFullYear(), b.getMonth(), b.getDate());
@@ -22,10 +24,15 @@ function dateDiffInDays(a, b) {
   return Math.floor((utc2 - utc1) / _MS_PER_DAY);
 }
 
-exports.verificar_movimiento = async function (event, context, callback) {
-  const json = JSON.parse(JSON.stringify(event));
+async function asyncForEach(array, callback) {
+  for (let index = 0; index < array.length; index++) {
+    await callback(array[index], index, array);
+  }
+}
+
+exports.revisar_planes = async function (event, context, callback) {
   var today = new Date();
-  var _date = today.getFullYear() + '-' + (today.getMonth()) + '-' + today.getDate();  
+  var _date = today.getFullYear() + '-' + (today.getMonth() + 1 ) + '-' + (today.getDate()-1);  
 
   var users;
 
@@ -33,47 +40,56 @@ exports.verificar_movimiento = async function (event, context, callback) {
     TableName: TABLE_USERS
   };
 
-  const paramsRevision = {};
-
-  dynamoDB.scan((params, (error, result) => {
+  await dynamoDB.scan(params, function (error, result){
     if (error) {
       console.log(error);
       res.status(400).json({
         error: 'No se ha podido acceder a los planes'
       })
     } else {
-      users = result.Items;
+      const {Items} = result;
+      users = Items;
     }
-  }));
+  }).promise();
+
 
   if (users.length > 0) {
 
     //Verficar diferencia de fechas menor q numero de dias
-    users.forEach(element => {
-      if(users.Activo == 1 &&
-        dateDiffInDays(new Date(Object.entries(element.Trips)[Object.keys(element.Trips).length - 1][2]),new Date(_date))==0
-        ){
+    for(let i = 0; i < users.length; i++){
+      var values = Object.entries(users[i].Payments)[0].toString().split(',');
+      var days = dateDiffInDays(new Date(values[3]),new Date(_date));
+
+      console.log(new Date(values[3]));
+      console.log(new Date(_date));
+
+      if(users[i].Activo == 1 && days == 0){
+        console.log("Paso la validacion");
 
         const paramsUpdate = {
           TableName: TABLE_USERS,
           Key: {
-            Email: element.Email
+            Email: users[i].Email
           },
-          UpdateExpression: 'SET #attr =:NewValue',
+          UpdateExpression: 'SET #attr = :NewValue',
           ExpressionAttributeNames: {
             '#attr': 'Activo'
           },
           ExpressionAttributeValues: {
-            ':NewValue': 0,
+            ':NewValue': 0
           }
         };
-  
-        dynamoDB.update(paramsUpdate, function (error, result) {
+
+        await dynamoDB.update(paramsUpdate, function (error, result) {
           if (error) {
-            console.log("No se pudo actualzar el estado del usuario " + element.Email);
+            console.log("No se pudo actualzar el estado del usuario " + users[i].Email);
+          }else{
+            console.log("Cumlpiop con el cambio");
           }
-        });
+        }).promise();
+      }else{
+        console.log("No Paso la validacion");
       }
-    });
+    }
   }
 }

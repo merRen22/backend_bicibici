@@ -53,7 +53,9 @@ functions:
   revisar_planes_usuarios:
     handler: cloudWatchFunctions/revisar_planes.revisar_planes
     events:
-      - schedule: rate(2 hours)
+      - schedule: 
+          rate: rate(10 minutes)
+          enabled: false
       - http:
           path: revisar_planes
           method: ANY

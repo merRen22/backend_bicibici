@@ -25,7 +25,7 @@ app.use(bodyParser.json({string: false}));
 app.post('/reportar_bicicleta', (req, res) => {
     var today = new Date();
     const json = JSON.parse(JSON.stringify(req.body));
-    var _date = today.getFullYear() + '-' + (today.getMonth()) + '-' + today.getDate() + "|" + today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds()
+    var _date = today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate() + "|" + today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds()
     
     const params = {
         TableName: TABLE_REPORT,
