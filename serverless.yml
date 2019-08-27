@@ -146,11 +146,11 @@ resources:
       Properties:
         AttributeDefinitions:
           -
-            AttributeName: PlanID
-            AttributeType: N
+            AttributeName: Plan
+            AttributeType: S
         KeySchema:
           -
-            AttributeName: PlanID
+            AttributeName: Plan
             KeyType: HASH
         ProvisionedThroughput:
           ReadCapacityUnits: 1
@@ -163,11 +163,11 @@ resources:
       Properties:
         AttributeDefinitions:
           -
-            AttributeName: StationID
-            AttributeType: N
+            AttributeName: Address
+            AttributeType: S
         KeySchema:
           -
-            AttributeName: StationID
+            AttributeName: Address
             KeyType: HASH
         ProvisionedThroughput:
           ReadCapacityUnits: 1
