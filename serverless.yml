@@ -129,11 +129,11 @@ resources:
       Properties:
         AttributeDefinitions:
           -
-            AttributeName: BicycleID
+            AttributeName: uuidBike
             AttributeType: N
         KeySchema:
           -
-            AttributeName: BicycleID
+            AttributeName: uuidBike
             KeyType: HASH
         ProvisionedThroughput:
           ReadCapacityUnits: 1
@@ -146,11 +146,11 @@ resources:
       Properties:
         AttributeDefinitions:
           -
-            AttributeName: Plan
+            AttributeName: uuidPlan
             AttributeType: S
         KeySchema:
           -
-            AttributeName: Plan
+            AttributeName: uuidPlan
             KeyType: HASH
         ProvisionedThroughput:
           ReadCapacityUnits: 1
@@ -163,11 +163,11 @@ resources:
       Properties:
         AttributeDefinitions:
           -
-            AttributeName: Address
+            AttributeName: uuidStation
             AttributeType: S
         KeySchema:
           -
-            AttributeName: Address
+            AttributeName: uuidStation
             KeyType: HASH
         ProvisionedThroughput:
           ReadCapacityUnits: 1
@@ -180,11 +180,11 @@ resources:
       Properties:
         AttributeDefinitions:
           -
-            AttributeName: Email
+            AttributeName: uuidUser
             AttributeType: S
         KeySchema:
           -
-            AttributeName: Email
+            AttributeName: uuidUser
             KeyType: HASH
         ProvisionedThroughput:
           ReadCapacityUnits: 1
@@ -197,11 +197,11 @@ resources:
       Properties:
         AttributeDefinitions:
           -
-            AttributeName: ReportDate
+            AttributeName: uuidReport
             AttributeType: S
         KeySchema:
           -
-            AttributeName: ReportDate
+            AttributeName: uuidReport
             KeyType: HASH
         ProvisionedThroughput:
           ReadCapacityUnits: 1
