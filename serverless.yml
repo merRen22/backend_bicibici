@@ -130,7 +130,7 @@ resources:
         AttributeDefinitions:
           -
             AttributeName: uuidBike
-            AttributeType: N
+            AttributeType: S
         KeySchema:
           -
             AttributeName: uuidBike
