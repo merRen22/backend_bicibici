@@ -47,7 +47,7 @@ functions:
     handler: bicycleFunctions/mensaje_emergencia.mensaje_emergencia
     events:
       - iot:
-          name: ${file(./config.json):IoT_Name}
+          name: ${file(./config.json):IoT_Emergency}
           sql: ${file(./config.json):IoT_topic}
           description: ${file(./config.json):IoT_Description}
           enabled: true
