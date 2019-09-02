@@ -27,7 +27,10 @@ function Bike(IsIntervened,BicycleID,Longuitude,Available,IsMoving,Latitude){
 
 exports.verificar_movimiento = async function(event, context, callback){
   const json = JSON.parse(JSON.stringify(event));
+  console.log(json)
+  callback(null,{body: JSON.stringify({ message: "success" })});
   
+  /*
   var params = {
     Key: {
       BicycleID: json.BicycleID
@@ -83,4 +86,5 @@ exports.verificar_movimiento = async function(event, context, callback){
       }
 }).promise();
   }
+  */
 }

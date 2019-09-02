@@ -43,6 +43,16 @@ functions:
           enabled: true
           sqlVersion: ${file(./config.json):IoT_Version}
   
+  enviar_mensaje_emergencia:
+    handler: bicycleFunctions/mensaje_emergencia.mensaje_emergencia
+    events:
+      - iot:
+          name: ${file(./config.json):IoT_Name}
+          sql: ${file(./config.json):IoT_topic}
+          description: ${file(./config.json):IoT_Description}
+          enabled: true
+          sqlVersion: ${file(./config.json):IoT_Version}
+  
   obtener_planes_usuarios:
     handler: userFunctions/obtener_planes.obtener_planes
     events:
