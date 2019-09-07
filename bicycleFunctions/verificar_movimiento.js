@@ -27,7 +27,15 @@ function Bike(IsIntervened,BicycleID,Longuitude,Available,IsMoving,Latitude){
 
 exports.verificar_movimiento = async function(event, context, callback){
   const json = JSON.parse(JSON.stringify(event));
-  
+  console.log(json)
+  callback(null,{body: JSON.stringify(
+    { 
+      status: 'success',
+      breaksStatus: json.uuidBike == '086654f0-cba4-11e9-b0ff-43245eef2175'?1:0
+    })
+  });
+
+  /*
   var params = {
     Key: {
       BicycleID: json.BicycleID
@@ -83,4 +91,5 @@ exports.verificar_movimiento = async function(event, context, callback){
       }
 }).promise();
   }
+  */
 }
