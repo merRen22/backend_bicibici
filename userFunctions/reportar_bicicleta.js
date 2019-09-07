@@ -26,15 +26,6 @@ app.use(bodyParser.json({string: false}));
 app.post('/reportar_bicicleta', (req, res) => {
     var today = new Date();
     const json = JSON.parse(JSON.stringify(req.body));
-
-    var count = Object.keys(json).length;
-    if(count<4){
-      res.json({
-        sucess: false,
-        message: 'body empty' 
-      });
-    }
-    
     var _date = today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate() + "|" + today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds()
     
     const params = {
