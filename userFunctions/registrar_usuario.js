@@ -1,38 +1,39 @@
 var AWS = require('aws-sdk');
 AWS.config.update({region: 'us-east-1'});
-var ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
 
 const TABLE_USERS = process.env.TABLE_USERS;
+const IS_OFFLINE = process.env.IS_OFFLINE;
+
+let dynamoDB;
+
+if(IS_OFFLINE){
+  dynamoDB = new AWS.DynamoDB.DocumentClient({
+    region: 'localhost',
+    endpoint: 'http://localhost:8000'
+  });
+}else{
+  dynamoDB = new AWS.DynamoDB.DocumentClient();
+}
+
 
 exports.registrar_usuario = async function(event, context, callback){
-    //CRETEATE USER IN DYNAMO DB
-
     //Only trigger when user has confirmed his email and singup in cognito
     //CognitTrigger :: PostAuthentication
     console.log("Correo de usuario " + event.request.userAttributes.email);
     var params = {
         TableName: TABLE_USERS,
         Item: {
-            'Email' : {S: event.request.userAttributes.email},
-            'Trips': {M: {}},
-            'Payments': {M: {}},
-            'Activo':{N: 0},
+            uuidUser : event.request.userAttributes.email,
+            trips : {},
+            payments: {},
+            activo: 0
         }
     };
-
-    /*
-
-            'Payments':{M: [""]},
-            'Trips':{M: [""]},
-    
-    */
     
     // Call DynamoDB to add the item to the table
-    await ddb.putItem(params, function(err, data) {
+    await dynamoDB.put(params, function(err, data) {
         if (err) {
             console.log("Error" + err);
-            //callback(null,{body: JSON.stringify({ message: "No se ha podido crear al usuario" })});
-            //context.done()
         } else {
             console.log("Usuario creado con exito");
         }
