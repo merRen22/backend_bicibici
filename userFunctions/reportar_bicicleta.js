@@ -3,6 +3,7 @@ const serverless = require('serverless-http');
 const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
+const uuidv1 = require('uuid/v1');
 
 var AWS = require('aws-sdk');
 AWS.config.update({region: 'us-east-1'});
@@ -25,16 +26,26 @@ app.use(bodyParser.json({string: false}));
 app.post('/reportar_bicicleta', (req, res) => {
     var today = new Date();
     const json = JSON.parse(JSON.stringify(req.body));
+
+    var count = Object.keys(json).length;
+    if(count<4){
+      res.json({
+        sucess: false,
+        message: 'body empty' 
+      });
+    }
+    
     var _date = today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate() + "|" + today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds()
     
     const params = {
         TableName: TABLE_REPORT,
         Item: {
-            ReportDate: json.Email + " - " + _date,
+            uuidReport : uuidv1(),
+            Date:  _date,
             Description: json.Description,
             Latitude: json.Latitude,
             Longitude: json.Longitude,
-            BicycleID: json.BicycleID
+            uuidBicycle: json.uuidBicycle
         },
     };
 
