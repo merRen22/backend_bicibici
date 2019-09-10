@@ -1,5 +1,12 @@
+
+const serverless = require('serverless-http');
+const express = require('express');
+const app = express();
+const bodyParser = require('body-parser');
+
 var AWS = require('aws-sdk');
-AWS.config.update({region: 'us-east-1'});
+var iotdata = new AWS.IotData({ endpoint: 'azkptoochbd3i-ats.iot.us-east-1.amazonaws.com:8883' });
+
 
 let dynamoDB;
 
@@ -16,7 +23,7 @@ if (IS_OFFLINE) {
   dynamoDB = new AWS.DynamoDB.DocumentClient();
 }
 
-function Bike(IsIntervened,BicycleID,Longuitude,Available,IsMoving,Latitude){  
+function Bike(IsIntervened, BicycleID, Longuitude, Available, IsMoving, Latitude) {
   this.IsIntervened = IsIntervened;
   this.BicycleID = BicycleID;
   this.Longuitude = Longuitude;
@@ -25,71 +32,20 @@ function Bike(IsIntervened,BicycleID,Longuitude,Available,IsMoving,Latitude){
   this.Latitude = Latitude;
 }
 
-exports.verificar_movimiento = async function(event, context, callback){
-  const json = JSON.parse(event);
-  console.log(json)
-  callback(null,{body: JSON.stringify(
-    { 
-      status: 'success',
-      breaksStatus: json.uuidBike == '086654f0-cba4-11e9-b0ff-43245eef2175'?1:0
-    })
-  });
 
-  /*
-  var params = {
-    Key: {
-      BicycleID: json.BicycleID
-  }, 
-  TableName: "Bicycle"
- };
- 
+module.exports.verificar_movimiento = serverless(app);
+
+
+app.use(bodyParser.json({string: false}));
+
+app.post('/verificar_movimiento', (req, res) => {
   
- const scan = await dynamoDB.get(params).promise();
-
- if(scan ==  null){
-     console.log("fue nulo");
- }
-
- var bike = new Bike(
-          scan.Item.IsIntervened.N,
-          scan.Item.BicycleID.N,
-          scan.Item.Longitude.N,
-          scan.Item.Available.N,
-          scan.Item.IsMoving.N,
-          scan.Item.Latitude.N
-          )
-      
-  if(bike.Available == 0 && json.Ismoving == 1){
-    callback(null,{body: JSON.stringify({ message: "Call to Police 🚨 🚨 🚨" })});
-  }else{
+    const json = JSON.parse(JSON.stringify(req.body));
+    console.log(json)
     
-    //bike.ismoving = 1;
-    
-    var paramsUpdate = {
-      TableName: "Bicycle",
-      Key: {
-        BicycleID: json.BicycleID
-      },
-      UpdateExpression: 'SET #attr1 =:newLongitude , #attr2 =:newIsMoving ,  #attr3 =:newLatitude',
-      ExpressionAttributeNames: {
-        '#attr1': 'Longitude',
-        '#attr2': 'IsMoving',
-        '#attr3': 'Latitude'
-      },
-      ExpressionAttributeValues: {
-        ':newLongitude': json.Longitude,
-        ':newLatitude': json.Latitude,
-        ':newIsMoving': 1
-      }
-    };
-    
-    await dynamoDB.update(paramsUpdate, function(err, data) {
-      if (err) {
-        callback(null,{body: JSON.stringify({ message: "Error al realizar el update 😢 " })});
-      } else {
-        callback(null,{body: JSON.stringify({ message: "Se actualizo con exito el registro crack 😄 " })});
-      }
-}).promise();
-  }
-  */
-}
+      res.json({
+        status: 'success',
+        breaksStatus: json.uuidBike== '086654f0-cba4-11e9-b0ff-43245eef2175'?1:0
+      });
+  
+});
