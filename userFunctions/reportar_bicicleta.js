@@ -3,7 +3,7 @@ const serverless = require('serverless-http');
 const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
-
+const uuidv1 = require('uuid/v1');
 var AWS = require('aws-sdk');
 AWS.config.update({region: 'us-east-1'});
 
@@ -30,11 +30,13 @@ app.post('/reportar_bicicleta', (req, res) => {
     const params = {
         TableName: TABLE_REPORT,
         Item: {
-            ReportDate: json.Email + " - " + _date,
-            Description: json.Description,
-            Latitude: json.Latitude,
-            Longitude: json.Longitude,
-            BicycleID: json.BicycleID
+            uuidReport : uuidv1(),
+            date: _date,
+            description: json.description,
+            latitude: json.latitude,
+            state : json.state,
+            longitude: json.longitude,
+            uuidBike: json.uuidBike
         },
     };
 
@@ -54,4 +56,4 @@ app.post('/reportar_bicicleta', (req, res) => {
   });
 });
 
-module.exports.reportar_bicicleta = serverless(app);
+module.exports.reportar_bicicleta = serverless(app);  
