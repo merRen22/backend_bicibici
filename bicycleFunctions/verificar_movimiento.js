@@ -26,7 +26,7 @@ function Bike(IsIntervened,BicycleID,Longuitude,Available,IsMoving,Latitude){
 }
 
 exports.verificar_movimiento = async function(event, context, callback){
-  const json = JSON.parse(JSON.stringify(event));
+  const json = JSON.parse(event);
   console.log(json)
   callback(null,{body: JSON.stringify(
     { 
