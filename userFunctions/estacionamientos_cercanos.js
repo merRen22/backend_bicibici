@@ -16,9 +16,10 @@ if(IS_OFFLINE){
   dynamoDB = new AWS.DynamoDB.DocumentClient({
     region: 'localhost',
     endpoint: 'http://localhost:8000'
+
   });
 }else{
-  dynamoDB = new AWS.DynamoDB.DocumentClient();
+  dynamoDB = new AWS.DynamoDB.DocumentClient()
 }
 
 app.use(bodyParser.json({string: false}));
@@ -31,13 +32,14 @@ app.post('/estaciones', (req, res) => {
         TableName: TABLE_STATIONS
     };
 
-  dynamoDB.scan(params,(error,result)=>{
+dynamoDB.scan(params,(error,result)=>{
     if(error){
       console.log(error);
       res.status(400).json({
         error: 'No se ha podido acceder a las estaciones'
       })
     }else{
+      
       const {Items} = result;
 
       //Display only stations near user position
@@ -48,8 +50,8 @@ app.post('/estaciones', (req, res) => {
       Items.forEach(function(element) {
         if(
             geolib.isPointWithinRadius(
-                { latitude: json.Latitude, longitude: json.Longitude },
-                { latitude: element.Latitude, longitude: element.Longitude },5000
+                { latitude: json.latitude, longitude: json.longitude },
+                { latitude: element.latitude, longitude: element.longitude },5000
                 )
         ){
             Stations.push(element);}
@@ -59,9 +61,9 @@ app.post('/estaciones', (req, res) => {
         sucess: true,
         message: 'Estaciones listas',
         Stations: Stations
-      });
+        });
     }
-  });
+  });  
 });
 
 module.exports.estacionamientos_cercanos = serverless(app);
