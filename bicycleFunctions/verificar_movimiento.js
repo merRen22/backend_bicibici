@@ -5,12 +5,9 @@ const app = express();
 const bodyParser = require('body-parser');
 
 var AWS = require('aws-sdk');
-var iotdata = new AWS.IotData({ endpoint: 'azkptoochbd3i-ats.iot.us-east-1.amazonaws.com:8883' });
-
-
 let dynamoDB;
 
-
+const TABLE_BIKES = process.env.TABLE_BIKES;
 const IS_OFFLINE = process.env.IS_OFFLINE;
 
 
@@ -23,28 +20,64 @@ if (IS_OFFLINE) {
   dynamoDB = new AWS.DynamoDB.DocumentClient();
 }
 
-function Bike(IsIntervened, BicycleID, Longuitude, Available, IsMoving, Latitude) {
-  this.IsIntervened = IsIntervened;
-  this.BicycleID = BicycleID;
-  this.Longuitude = Longuitude;
-  this.Available = Available;
-  this.IsMoving = IsMoving;
-  this.Latitude = Latitude;
-}
-
 module.exports.verificar_movimiento = serverless(app);
 
 
-app.use(bodyParser.json({string: false}));
+app.use(bodyParser.json({ string: false }));
 
-app.post('/verificar_movimiento', (req, res) => {
+app.post('/verificar_movimiento', async (req, res) => {
+  const json = JSON.parse(JSON.stringify(req.body));
+
+  console.log(json.uuidBike)
+
+  const params = {
+    Key: {
+      uuidBike: json.uuidBike
+    },
+    TableName: TABLE_BIKES
+  };
+
+  var bike;
+
+  await dynamoDB.get(params, (error, result) => {
+    if (error) {
+      console.log(error);
+      res.status(400).json({
+        error: 'No se ha podido acceder a la bicicleta'
+      })
+    } else {
+      console.log("data de resultado :: " + result.Item)
+      bike = result.Item;
+    }
+  }).promise();
+
+  const paramsUpdate = {
+    TableName: TABLE_BIKES,
+    Key: {
+      uuidBike: json.uuidBike
+    },
+    UpdateExpression: 'SET #attr1 = :NewValue1 , #attr2 = :NewValue2, #attr3 = :NewValue3',
+    ExpressionAttributeNames: {
+      '#attr1': 'latitude',
+      '#attr2': 'longitude',
+      '#attr3': 'isMoving',
+    },
+    ExpressionAttributeValues: {
+      ':NewValue1': json.latitude,
+      ':NewValue2': json.longitude,
+      ':NewValue3': json.isMoving
+    }
+  };
+
+  await dynamoDB.update(paramsUpdate, function (error, result) {
+    if (error) {
+      console.log("No se pudo actualzar el estado de la bicicleta " + json.uuidBike);
+    }
+  }).promise();
   
-    const json = JSON.parse(JSON.stringify(req.body));
-    console.log(json)
-    
-      res.json({
-        status: 'success',
-        breaksStatus: json.uuidBike== '086654f0-cba4-11e9-b0ff-43245eef2175'?1:0
-      });
-  
+  res.json({
+    status: 'success',
+    breaksStatus: bike.available == 0 && json.isMoving == 1?1 : 0
+  });
+
 });
