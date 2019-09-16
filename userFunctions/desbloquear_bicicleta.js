@@ -9,6 +9,7 @@ AWS.config.update({ region: 'us-east-1' });
 
 const TABLE_BIKES = process.env.TABLE_BIKES;
 const TABLE_USERS = process.env.TABLE_USERS;
+const TABLE_STATIONS = process.env.TABLE_STATIONS;
 const IS_OFFLINE = process.env.IS_OFFLINE;
 let dynamoDB;
 
@@ -29,31 +30,88 @@ app.post('/desbloquearBicicleta', async (req, res, next) => {
 
   //UPDATE BIKE STATUS
   const json = JSON.parse(JSON.stringify(req.body));
-
-  const paramsGet = {
+  var parms ={
     TableName: TABLE_BIKES,
-    Key: {
-      BicycleID: json.BicycleID
-    },
-    UpdateExpression: 'SET #row =:StatusFuture',
-    ConditionExpression: "#row = :StatusPresent and #row2 = :Intervened",
+    KeyConditionExpression : "#uu = :uuidBike",
     ExpressionAttributeNames: {
-      '#row': 'Available',
-      '#row2': 'IsIntervened'
+      '#uu': 'uuidBike'
     },
     ExpressionAttributeValues: {
-      ':StatusFuture': 0,
-      ':StatusPresent': 1,
-      ':Intervened': 0
+      ':uuidBike': json.uuidBike
     }
   };
 
-  //GET BIKE TO CHECK AVAILABILITY
+  var available = false
+  var uuidStation
+  await dynamoDB.query(parms, function (error, data) {
+    if (error) {
+      //error de aws de sync
+    }
+    else {
+      available = true;
+      uuidStation = data.Items[0].uuidStation
+    }
+  }).promise();
 
+  // bici en movimiento
+  var parmsUpdateBike ={
+    TableName: TABLE_BIKES,
+    Key: {
+      uuidBike: json.uuidBike
+    },
+    UpdateExpression: 'SET #attr1 =:newAvailable, #attr2 =:newIsMoving, #attr3 =:newStation',
+    ExpressionAttributeNames: {
+      '#attr1': 'available',
+      '#attr2': 'isMoving',
+      '#attr3': 'uuidStation'
+    },
+    ExpressionAttributeValues: {
+      ':newAvailable': 1,
+      ':newIsMoving': 1,
+      ':newStation': json.uuidStation
+    }
+  };
+  if(available)
+  {
+    try {
+      await dynamoDB.update(parmsUpdateBike, function (error, result) {
+        if (error) {
+          //error de aws de sync
+        }
+        else {
+          bikeUpdated = true;
+        }
+      }).promise();
+    } catch (error) {
+      if (bikeUpdated == false) {
+        console.error("error obtenido :: " + error);
+        res.status(400).json({
+          error: 'No se pudo acceder a la bicicleta, intentelo de nuevo'
+        });
+      }
+    }
+  }
+ // quitar slot
+ var parmsUpdateStation ={
+  TableName: TABLE_STATIONS,
+  Key: {
+    uuidStation: uuidStation
+  },
+  UpdateExpression: 'SET #attr1 = #attr1 - :newvalue',
+  ExpressionAttributeNames: {
+    '#attr1': 'availableSlots'
+  },
+  ExpressionAttributeValues: {
+    ':newvalue': 1
+  }
+};
+if(bikeUpdated)
+{
   try {
-    await dynamoDB.update(paramsGet, function (error, result) {
+    await dynamoDB.update(parmsUpdateStation, function (error, result) {
       if (error) {
         //error de aws de sync
+        bikeUpdated = false;
       }
       else {
         bikeUpdated = true;
@@ -63,10 +121,13 @@ app.post('/desbloquearBicicleta', async (req, res, next) => {
     if (bikeUpdated == false) {
       console.error("error obtenido :: " + error);
       res.status(400).json({
-        error: 'No se pudo acceder a la bicicleta, intentelo de nuevo'
+        error: 'No se pudo crear el movimiento, intentelo de nuevo'
       });
     }
   }
+}
+  
+  //USER MAP
 
   if (bikeUpdated == false) {
     res.status(400).json({
@@ -80,18 +141,20 @@ app.post('/desbloquearBicicleta', async (req, res, next) => {
     const paramsPutUser = {
       TableName: TABLE_USERS,
       Key: {
-        Email: json.Email
+        uuidUser: json.uuidUser
       },
       UpdateExpression: 'SET #mapName.#Trip =:StringSet',
       ExpressionAttributeNames: {
-        '#mapName': 'Trips',
+        '#mapName': 'trips',
         '#Trip': _date
       },
       ExpressionAttributeValues: {
         ':StringSet': [
-          json.BicycleID,
+          json.uuidBike,
           "none",
-          json.Ubicacion,
+          json.originLatitude,
+          json.originLongitude,
+          "empty",
           "empty"
         ],
       }

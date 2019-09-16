@@ -9,6 +9,7 @@ AWS.config.update({ region: 'us-east-1' });
 
 const TABLE_BIKES = process.env.TABLE_BIKES;
 const TABLE_USERS = process.env.TABLE_USERS;
+const TABLE_STATIONS = process.env.TABLE_STATIONS;
 const IS_OFFLINE = process.env.IS_OFFLINE;
 let dynamoDB;
 
@@ -27,47 +28,110 @@ app.post('/finalizar_viaje', async (req, res, next) => {
   var today = new Date();
   var bikeUpdate = false;
 
-  //UPDATE BIKE STATUS
+  //TOMO EL uuid de la estacion final
   const json = JSON.parse(JSON.stringify(req.body));
-
-  const paramsPutBike = {
+  var parms ={
     TableName: TABLE_BIKES,
-    Key: {
-      BicycleID: json.BicycleID
-      },
-    UpdateExpression: 'SET #row =:Status ',
+    KeyConditionExpression : "#uu = :uuidBike",
     ExpressionAttributeNames: {
-      '#row': 'Available',
+      '#uu': 'uuidBike'
     },
     ExpressionAttributeValues: {
-      ':Status': 1,
+      ':uuidBike': json.uuidBike
     }
   };
 
-  await dynamoDB.update(paramsPutBike, function (error, data) {
+  var available = false
+  var uuidStation
+  await dynamoDB.query(parms, function (error, data) {
     if (error) {
-      console.log(error);
-      res.status(400).json({
-        error: 'No se ha podido actualizar el estado de la bicicelta intentelo nuevamente'
-      })
+      console.log(error)
+      //error de aws de sync
     }
     else {
-      bikeUpdate = true;
+      available = true;
+      uuidStation = data.Items[0].uuidStation
     }
   }).promise();
+
+  // bici en movimiento
+  var parmsUpdateBike ={
+    TableName: TABLE_BIKES,
+    Key: {
+      uuidBike: json.uuidBike
+    },
+    UpdateExpression: 'SET #attr1 =:newAvailable, #attr2 =:newIsMoving',
+    ExpressionAttributeNames: {
+      '#attr1': 'available',
+      '#attr2': 'isMoving'
+    },
+    ExpressionAttributeValues: {
+      ':newAvailable': 0,
+      ':newIsMoving': 0
+    }
+  };
+  if(available)
+  {
+    var bikeUpdated = false;
+    try {
+      await dynamoDB.update(parmsUpdateBike, function (error, result) {
+        if (error) {
+          console.log(error)
+        }
+        else {
+          bikeUpdated = true;
+        }
+      }).promise();
+    } catch (error) {
+      if (bikeUpdated == false) {
+        console.error("error obtenido :: " + error);
+        res.status(400).json({
+          error: 'No se pudo acceder a la bicicleta, intentelo de nuevo'
+        });
+      }
+    }
+  }
+ // aumentar slot
+ var parmsUpdateStation ={
+  TableName: TABLE_STATIONS,
+  Key: {
+    uuidStation: uuidStation
+  },
+  UpdateExpression: 'SET #attr1 = #attr1 + :newvalue',
+  ExpressionAttributeNames: {
+    '#attr1': 'availableSlots'
+  },
+  ExpressionAttributeValues: {
+    ':newvalue': 1
+  }
+};
+
+
+  await dynamoDB.update(parmsUpdateStation, function (error, result) {
+    if (error) {
+      //error de aws de sync
+      console.log(error)
+      bikeUpdated = false;
+    }
+    else {
+      bikeUpdated = true;
+    }
+  }).promise();
+ 
 
   if (bikeUpdate) {
     var _date = today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate() + "|" + today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds()
 
     const paramsgetUser = {
       Key: {
-        Email: json.Email
+        uuidUser: json.uuidUser
       },
       TableName: TABLE_USERS
     };
 
     var fecha_inicio = "";
-    var ubicacionInicio = "";
+    var originLatitude = "";
+    var originLongitude = "";
     var values;
     await dynamoDB.get(paramsgetUser, (error, result) => {
       if (error) {
@@ -77,9 +141,10 @@ app.post('/finalizar_viaje', async (req, res, next) => {
         })
       }
       else {
-        fecha_inicio = Object.keys(result.Item.Trips)[Object.keys(result.Item.Trips).length - 1];
-        values = Object.entries(result.Item.Trips)[Object.keys(result.Item.Trips).length - 1].toString().split(',');
-        ubicacionInicio = values[3];
+        fecha_inicio = Object.keys(result.Item.trips)[Object.keys(result.Item.trips).length - 1];
+        values = Object.entries(result.Item.trips)[Object.keys(result.Item.trips).length - 1].toString().split(',');
+        originLatitude = values[3];
+        originLongitude = values[3];
       }
     }).promise();
 
@@ -88,19 +153,21 @@ app.post('/finalizar_viaje', async (req, res, next) => {
       const paramsPutUser = {
         TableName: TABLE_USERS,
         Key: {
-          Email: json.Email,
+          uuidUser: json.uuidUser,
         },
         UpdateExpression: 'SET #mapName.#Trip =:StringSet',
         ExpressionAttributeNames: {
-          '#mapName': 'Trips',
+          '#mapName': 'trips',
           '#Trip': fecha_inicio
         },
         ExpressionAttributeValues: {
           ':StringSet': [
-            json.BicycleID,
+            json.uuidBike,
             _date,
-            parseInt(ubicacionInicio,10),
-            json.Ubicacion
+            originLatitude,
+            originLongitude,
+            json.destinationLatitude,
+            json.destinationLongitude
           ],
         }
       };

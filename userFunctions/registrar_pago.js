@@ -35,13 +35,13 @@ app.post('/registrar_pago', async (req, res, next) => {
   const paramsPayment = {
     TableName: TABLE_USERS,
     Key: {
-        Email: json.Email
+      uuidUser: json.uuidUser
     },
     UpdateExpression: 'SET #mapName.#Payment =:StringSet, #attr = :NumberValue ',
     ExpressionAttributeNames: {
-      '#mapName': 'Payments',
+      '#mapName': 'payments',
       '#Payment': _date,
-      '#attr': 'Activo'
+      '#attr': 'activo'
     },
     ExpressionAttributeValues: {
       ':StringSet': [

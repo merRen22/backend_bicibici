@@ -65,7 +65,14 @@ functions:
       - http:
           path: planes
           method: ANY
-          
+
+  obtener_usuario:
+    handler: userFunctions/obtener_usuario.obtener_usuario
+    events:
+      - http:
+          path: usuario
+          method: ANY
+
   revisar_planes_usuarios:
     handler: cloudWatchFunctions/revisar_planes.revisar_planes
     events:
