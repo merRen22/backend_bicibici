@@ -1,15 +1,15 @@
-
+'use strict';
 const serverless = require('serverless-http');
 const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
 
 var AWS = require('aws-sdk');
-let dynamoDB;
+AWS.config.update({ region: 'us-east-1' });
 
-const TABLE_BIKES = process.env.TABLE_BIKES;
+const TABLE_USERS = process.env.TABLE_USERS;
 const IS_OFFLINE = process.env.IS_OFFLINE;
-
+let dynamoDB;
 
 if (IS_OFFLINE) {
   dynamoDB = new AWS.DynamoDB.DocumentClient({
@@ -20,64 +20,54 @@ if (IS_OFFLINE) {
   dynamoDB = new AWS.DynamoDB.DocumentClient();
 }
 
-module.exports.verificar_movimiento = serverless(app);
-
-
 app.use(bodyParser.json({ string: false }));
 
-app.post('/verificar_movimiento', async (req, res) => {
+app.post('/registrar_pago', async (req, res, next) => {
   const json = JSON.parse(JSON.stringify(req.body));
+  var startDate = new Date();
+  var endDate = new Date();
 
-  console.log(json.uuidBike)
+  endDate.setDate(startDate.getDate() + json.Duration);
 
-  const params = {
+  var _date = startDate.getFullYear() + '-' + (startDate.getMonth() + 1) + '-' + startDate.getDate();
+  var _dateEnd = endDate.getFullYear() + '-' + (endDate.getMonth() + 1) + '-' + endDate.getDate();
+
+  const paramsPayment = {
+    TableName: TABLE_USERS,
     Key: {
-      uuidBike: json.uuidBike
+        Email: json.Email
     },
-    TableName: TABLE_BIKES
-  };
-
-  var bike;
-
-  await dynamoDB.get(params, (error, result) => {
-    if (error) {
-      console.log(error);
-      res.status(400).json({
-        error: 'No se ha podido acceder a la bicicleta'
-      })
-    } else {
-      console.log("data de resultado :: " + result.Item)
-      bike = result.Item;
-    }
-  }).promise();
-
-  const paramsUpdate = {
-    TableName: TABLE_BIKES,
-    Key: {
-      uuidBike: json.uuidBike
-    },
-    UpdateExpression: 'SET #attr1 = :NewValue1 , #attr2 = :NewValue2, #attr3 = :NewValue3',
+    UpdateExpression: 'SET #mapName.#Payment =:StringSet, #attr = :NumberValue ',
     ExpressionAttributeNames: {
-      '#attr1': 'latitude',
-      '#attr2': 'longitude',
-      '#attr3': 'isMoving',
+      '#mapName': 'Payments',
+      '#Payment': _date,
+      '#attr': 'Activo'
     },
     ExpressionAttributeValues: {
-      ':NewValue1': json.latitude,
-      ':NewValue2': json.longitude,
-      ':NewValue3': json.isMoving
+      ':StringSet': [
+        json.Duration.toString(),
+        json.Amount.toString(),
+        _dateEnd
+      ],
+      ':NumberValue': 1
     }
   };
 
-  await dynamoDB.update(paramsUpdate, function (error, result) {
-    if (error) {
-      console.log("No se pudo actualzar el estado de la bicicleta " + json.uuidBike);
-    }
-  }).promise();
-  
-  res.json({
-    status: 'success',
-    breaksStatus: bike.available == 0 && json.isMoving == 1?1 : 0
-  });
+  await dynamoDB.update(paramsPayment, function (error, result) {
+      if (error) {
+        console.log(error);
+        res.status(400).json({
+          error: 'No se pudo registrar el pago intentelo de nuevo'
+        })
+      }
+      else {
+        res.status(200).json({
+          message: 'Se registro el pago'
+        });
+      }
+    }).promise();
 
-});
+  }
+);
+
+module.exports.registrar_pago = serverless(app);
