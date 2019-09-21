@@ -91,13 +91,13 @@ app.post('/desbloquearBicicleta', async (req, res, next) => {
       }
     }
   }
- // quitar slot
+ // aumentar slot en el inicio
  var parmsUpdateStation ={
   TableName: TABLE_STATIONS,
   Key: {
     uuidStation: uuidStation
   },
-  UpdateExpression: 'SET #attr1 = #attr1 - :newvalue',
+  UpdateExpression: 'SET #attr1 = #attr1 + :newvalue',
   ExpressionAttributeNames: {
     '#attr1': 'availableSlots'
   },
@@ -126,7 +126,41 @@ if(bikeUpdated)
     }
   }
 }
-  
+//quitar slot en el final
+  var parmsUpdateStation2 ={
+  TableName: TABLE_STATIONS,
+  Key: {
+    uuidStation: json.uuidStation
+  },
+  UpdateExpression: 'SET #attr1 = #attr1 - :newvalue',
+  ExpressionAttributeNames: {
+    '#attr1': 'availableSlots'
+  },
+  ExpressionAttributeValues: {
+    ':newvalue': 1
+  }
+};
+if(bikeUpdated)
+{
+  try {
+    await dynamoDB.update(parmsUpdateStation2, function (error, result) {
+      if (error) {
+        //error de aws de sync
+        bikeUpdated = false;
+      }
+      else {
+        bikeUpdated = true;
+      }
+    }).promise();
+  } catch (error) {
+    if (bikeUpdated == false) {
+      console.error("error obtenido :: " + error);
+      res.status(400).json({
+        error: 'No se pudo crear el movimiento, intentelo de nuevo'
+      });
+    }
+  }
+}
   //USER MAP
 
   if (bikeUpdated == false) {
@@ -136,8 +170,10 @@ if(bikeUpdated)
   } else {
     //CREATE TRIP FOR USER
     //  [Date_time start,Date_time end,bike_id]
-    var _date = today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate() + "|" + today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds()
-
+    var _date = 
+    today.getDate()  + '/' + (today.getMonth() + 1) + '/' + today.getFullYear() + "|" + 
+    today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+    
     const paramsPutUser = {
       TableName: TABLE_USERS,
       Key: {
@@ -154,8 +190,8 @@ if(bikeUpdated)
           "none",
           json.originLatitude,
           json.originLongitude,
-          "empty",
-          "empty"
+          json.destinationLatitude,
+          json.destinationLongitude,
         ],
       }
     };

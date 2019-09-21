@@ -54,6 +54,27 @@ app.post('/reportar_bicicleta', async (req, res) => {
     }
   }).promise();
 
+  const paramsGetUser = {
+    Key: {
+      uuidUser: json.uuidUser, 
+        }, 
+    TableName: TABLE_USERS
+  };
+
+  var experience = 0
+
+  await dynamoDB.get(paramsGetUser,(error,result)=>{
+    if(error){
+      console.log(error);
+      res.status(400).json({
+        sucess: false,
+        message: 'No se pudo obtener data del usuario',
+      })
+    }else{
+      experience = result.Item.experience
+    }
+  }).promise();
+
   //UPDATE USER PUNTUATION
   const paramsPutUser = {
     TableName: TABLE_USERS,
@@ -65,7 +86,7 @@ app.post('/reportar_bicicleta', async (req, res) => {
       '#attr': 'experience'
     },
     ExpressionAttributeValues: {
-      ':points': 5,
+      ':points': experience + 5,
     }
   };
 
