@@ -203,7 +203,7 @@ app.post('/finalizar_viaje', async (req, res, next) => {
 
     }else{
       res.status(200).json({
-        message: 'Se dio por finalizado el viaje exitosamente'
+        message: 'No se encuentra en el estacionamiento'
       })
     }
       
