@@ -174,6 +174,9 @@ if(bikeUpdated)
     today.getDate()  + '/' + (today.getMonth() + 1) + '/' + today.getFullYear() + "|" + 
     today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
     
+    //Incluir el viaje del usuario
+    //Incluir puntuacion del usuario
+    //Incluir bicicleta en uso del usuario
     const paramsPutUser = {
       TableName: TABLE_USERS,
       Key: {
