@@ -42,53 +42,40 @@ app.post('/mensaje_emergencia', (req, res) => {
     }
   };
 
-  var available = false
-  var uuidStation
   var latitude
   var longitude 
+  var uuidUser
+  var email 
 
   await dynamoDB.query(parms, function (error, data) {
     if (error) {
       //error de aws de sync
     }
     else {
-      available = true;
-      uuidStation = data.Items[0].uuidStation
       latitude = data.Items[0].latitude
       longitude = data.Items[0].longitude
+      uuidUser = data.Items[0].uuidUser
     }
   }).promise();
 
-  //Escanear user
-  var email;
-  var params = {
-    TableName: TABLE_USERS,
-    FilterExpression: "#tr = :uuibike",
-    ExpressionAttributeNames: {
-        "#tr": "trips[0]",
-    },
-    ExpressionAttributeValues: {
-         ":uuibike": json.uuidBike
-    }
+  const params = {
+    Key: {
+      uuidUser: uuidUser, 
+        }, 
+    TableName: TABLE_USERS
   };
 
-  await dynamoDB.scan(params, function(err, data) {
-    if (err) {
-        console.error("Unable to scan the table. Error JSON:", JSON.stringify(err, null, 2));
-    } else {
-        // print all the trips
-        console.log("Scan succeeded.");
-           email = data.Items[0].emergencyContact;
-
-        // continue scanning if we have more trips, because
-        // scan can retrieve a maximum of 1MB of data
-        if (typeof data.LastEvaluatedKey != "undefined") {
-            console.log("Scanning for more...");
-            params.ExclusiveStartKey = data.LastEvaluatedKey;
-            dynamoDB.scan(params, onScan);
-        }
+  dynamoDB.get(params,(error,result)=>{
+    if(error){
+      console.log(error);
+      res.status(400).json({
+        sucess: false,
+        message: 'No se pudo obtener data del usuario',
+      })
+    }else{
+        email = result.Item.emergencyContact
     }
-  }).promise();
+  });
 
   //Enviar correo
 
