@@ -24,7 +24,7 @@ if (IS_OFFLINE) {
 app.use(bodyParser.json({ string: false }));
 
 
-app.post('/mensaje_emergencia', (req, res) => {
+app.post('/verificar_movimiento', async (req, res, next) =>  {
   var today = new Date();
   var bikeUpdated = false;
 
@@ -41,14 +41,14 @@ app.post('/mensaje_emergencia', (req, res) => {
     }
   };
 
-  var latitude
-  var longitude 
-  var uuidUser
-  var email 
+  var latitude = 1
+  var longitude  = 2
+  var uuidUser = "asdasdas"
+  var email = "asdsa"
 
   await dynamoDB.query(parms, function (error, data) {
     if (error) {
-      //error de aws de sync
+      console.log("error"+ error)
     }
     else {
       latitude = data.Items[0].latitude
@@ -64,7 +64,7 @@ app.post('/mensaje_emergencia', (req, res) => {
     TableName: TABLE_USERS
   };
 
-  dynamoDB.get(params,(error,result)=>{
+  await dynamoDB.get(params,(error,result)=>{
     if(error){
       console.log(error);
       res.status(400).json({
@@ -74,11 +74,9 @@ app.post('/mensaje_emergencia', (req, res) => {
     }else{
         email = result.Item.emergencyContact
     }
-  });
+  }).promise();
 
   //Enviar correo
-
-  async function main() {
     // Generate test SMTP service account from ethereal.email
     // Only needed if you don't have a real mail account for testing
     let testAccount = await nodemailer.createTestAccount();
@@ -96,20 +94,18 @@ app.post('/mensaje_emergencia', (req, res) => {
 
     // send mail with defined transport object
     let info = await transporter.sendMail({
-        from: '"Bici Bici Team 👻" <foo@example.com>', // sender address
+        from: '"Bici Bici Team 👻" <>', // sender address
         to: email, // list of receivers
         subject: 'Hello ✔', // Subject line
         text: 'Hello world?', // plain text body
         html: '<b>Hello world?</b>' // html body
-    });
+    }).promise();
 
     console.log('Message sent: %s', info.messageId);
-    // Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@example.com>
+    // Message sent: <>
 
     // Preview only available when sending through an Ethereal account
     console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
     // Preview URL: https://ethereal.email/message/WaQKMgKddxQDoou...
-  }
 
-  main().catch(console.error);
 });
