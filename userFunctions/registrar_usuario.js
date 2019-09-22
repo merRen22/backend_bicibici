@@ -19,6 +19,10 @@ if(IS_OFFLINE){
 exports.registrar_usuario = async function(event, context, callback){
     //Only trigger when user has confirmed his email and singup in cognito
     //CognitTrigger :: PostAuthentication
+    console.log("evento " + event)
+    console.log("evento request " + event.request)
+    console.log("evento request type " + event.request.eventType)
+    console.log("evento request type " + event.request.triggerSource)
     console.log("Correo de usuario " + event.request.userAttributes.email);
     var params = {
         TableName: TABLE_USERS,
@@ -26,18 +30,25 @@ exports.registrar_usuario = async function(event, context, callback){
             uuidUser : event.request.userAttributes.email,
             trips : {},
             payments: {},
-            activo: 0
+            activo: 0,
+            experience: 0,
+            emergencyContact: "none"
         }
     };
-    
-    // Call DynamoDB to add the item to the table
-    await dynamoDB.put(params, function(err, data) {
+
+    //only for uncofirmed accounts
+    if(event.request.userAttributes.email_verified != "true"){
+      // Call DynamoDB to add the item to the table
+      await dynamoDB.put(params, function(err, data) {
         if (err) {
             console.log("Error" + err);
         } else {
             console.log("Usuario creado con exito");
         }
     });
+
+    }
+    
     
     callback(null, event);
 

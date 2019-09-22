@@ -28,8 +28,11 @@ app.use(bodyParser.json({ string: false }));
 app.post('/finalizar_viaje', async (req, res, next) => {
   var today = new Date();
   var bikeUpdate = false;
+  var available = false
+  var uuidStation
 
-  //TOMO EL uuid de la estacion final
+  //obtener uuid de la estacion final ----------------------------------
+  // y disponibilidad de la bicicleta
   const json = JSON.parse(JSON.stringify(req.body));
   var parms ={
     TableName: TABLE_BIKES,
@@ -42,8 +45,6 @@ app.post('/finalizar_viaje', async (req, res, next) => {
     }
   };
 
-  var available = false
-  var uuidStation
   await dynamoDB.query(parms, function (error, data) {
     if (error) {
       console.log(error)
@@ -55,27 +56,32 @@ app.post('/finalizar_viaje', async (req, res, next) => {
     }
   }).promise();
 
-  // bici en movimiento
-  var parmsUpdateBike ={
-    TableName: TABLE_BIKES,
-    Key: {
-      uuidBike: json.uuidBike
-    },
-    UpdateExpression: 'SET #attr1 =:newAvailable, #attr2 =:newIsMoving',
-    ExpressionAttributeNames: {
-      '#attr1': 'available',
-      '#attr2': 'isMoving'
-    },
-    ExpressionAttributeValues: {
-      ':newAvailable': 0,
-      ':newIsMoving': 0
-    }
-  };
+  //--------------------------------------------------------------------
+  
   if(available)
   {
+      
+    // bici en movimiento ------------------------------------------------
+    // acutaliza rne movimiento y available
+    var parmsUpdateBike ={
+      TableName: TABLE_BIKES,
+      Key: {
+        uuidBike: json.uuidBike
+      },
+      UpdateExpression: 'SET #attr1 =:newAvailable, #attr2 =:newIsMoving',
+      ExpressionAttributeNames: {
+        '#attr1': 'available',
+        '#attr2': 'isMoving'
+      },
+      ExpressionAttributeValues: {
+        ':newAvailable': 0,
+        ':newIsMoving': 0
+      }
+    };
  
 
-    var _date = today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate() + "|" + today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds()
+    var _date = today.getDate() + '/' + (today.getMonth() + 1) + '/' +today.getFullYear() + 
+    "|" + today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds()
 
     const paramsgetUser = {
       Key: {
@@ -102,38 +108,28 @@ app.post('/finalizar_viaje', async (req, res, next) => {
         values = Object.entries(result.Item.trips)[Object.keys(result.Item.trips).length - 1].toString().split(',');
         originLatitude = values[2];
         originLongitude = values[3];
-        destinationLatitude = values[4];
-        destinationLongitude = values[5];
+        destinationLatitude = values[5];
+        destinationLongitude = values[4];
       }
     }).promise();
+
+
+    console.log("latitud destino " + destinationLatitude + " longitude " +  destinationLongitude)
+    console.log("latitud " + json.latitude + " longitude " +  json.longitude)
+    console.log("esta dentro de rango" + (
+      geolib.isPointWithinRadius(
+          { latitude: destinationLatitude, longitude: destinationLongitude },
+          { latitude: json.latitude, longitude: json.longitude },15
+          )).toString())
 
     //revisar se enucntra cerca d ela posicion de destino
     if(
       geolib.isPointWithinRadius(
           { latitude: destinationLatitude, longitude: destinationLongitude },
-          { latitude: json.latitude, longitude: json.longitude },5
+          { latitude: json.latitude, longitude: json.longitude },15
           )
     ){
-
-
-      try {
-        await dynamoDB.update(parmsUpdateBike, function (error, result) {
-          if (error) {
-            console.log(error)
-          }
-          else {
-            bikeUpdated = true;
-          }
-        }).promise();
-      } catch (error) {
-        if (bikeUpdated == false) {
-          console.error("error obtenido :: " + error);
-          res.status(400).json({
-            error: 'No se pudo acceder a la bicicleta, intentelo de nuevo'
-          });
-        }
-      }
-
+      
  // aumentar slot
  var parmsUpdateStation ={
   TableName: TABLE_STATIONS,
@@ -152,14 +148,28 @@ app.post('/finalizar_viaje', async (req, res, next) => {
 
   await dynamoDB.update(parmsUpdateStation, function (error, result) {
     if (error) {
-      //error de aws de sync
       console.log(error)
-      bikeUpdated = false;
-    }
-    else {
-      bikeUpdated = true;
     }
   }).promise();
+
+
+      try {
+        await dynamoDB.update(parmsUpdateBike, function (error, result) {
+          if (error) {
+            console.log(error)
+          }
+          else {
+            this.bikeUpdated = true;
+          }
+        }).promise();
+      } catch (error) {
+        if (this.bikeUpdated == false) {
+          console.error("error obtenido :: " + error);
+          res.status(400).json({
+            error: 'No se pudo acceder a la bicicleta, intentelo de nuevo'
+          });
+        }
+      }
 
       
     if (fecha_inicio != "") {

@@ -22,38 +22,24 @@ if (IS_OFFLINE) {
 
 app.use(bodyParser.json({ string: false }));
 
-app.post('/registrar_pago', async (req, res, next) => {
+app.post('/registrar_emergencia', async (req, res, next) => {
   const json = JSON.parse(JSON.stringify(req.body));
-  var startDate = new Date();
-  var endDate = new Date();
 
-  endDate.setDate(startDate.getDate() + json.Duration);
-
-  var _date = startDate.getDate() + '/' + (startDate.getMonth() + 1) + '/' + startDate.getFullYear();
-  var _dateEnd = endDate.getDate() + '/' + (endDate.getMonth() + 1) + '/' + endDate.getFullYear();
-
-  const paramsPayment = {
+  const paramsUpdate = {
     TableName: TABLE_USERS,
     Key: {
       uuidUser: json.uuidUser
     },
-    UpdateExpression: 'SET #mapName.#Payment =:StringSet, #attr = :NumberValue ',
+    UpdateExpression: 'SET #attr1 =:value',
     ExpressionAttributeNames: {
-      '#mapName': 'payments',
-      '#Payment': _date,
-      '#attr': 'activo'
+      '#attr1': 'emergencyContact'
     },
     ExpressionAttributeValues: {
-      ':StringSet': [
-        json.Duration.toString(),
-        json.Amount.toString(),
-        _dateEnd
-      ],
-      ':NumberValue': 1
+      ':value': json.emergencyContact
     }
   };
 
-  await dynamoDB.update(paramsPayment, function (error, result) {
+  await dynamoDB.update(paramsUpdate, function (error, result) {
       if (error) {
         console.log(error);
         res.status(400).json({
@@ -70,4 +56,4 @@ app.post('/registrar_pago', async (req, res, next) => {
   }
 );
 
-module.exports.registrar_pago = serverless(app);
+module.exports.registrar_emergencia = serverless(app);

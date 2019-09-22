@@ -29,8 +29,8 @@ app.post('/registrar_pago', async (req, res, next) => {
 
   endDate.setDate(startDate.getDate() + json.Duration);
 
-  var _date = startDate.getFullYear() + '-' + (startDate.getMonth() + 1) + '-' + startDate.getDate();
-  var _dateEnd = endDate.getFullYear() + '-' + (endDate.getMonth() + 1) + '-' + endDate.getDate();
+  var _date = startDate.getDate() + '/' + (startDate.getMonth() + 1) + '/' + startDate.getFullYear();
+  var _dateEnd = endDate.getDate() + '/' + (endDate.getMonth() + 1)  + '/' + endDate.getFullYear();
 
   const paramsPayment = {
     TableName: TABLE_USERS,

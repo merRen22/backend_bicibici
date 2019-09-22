@@ -117,6 +117,13 @@ functions:
       - http:
           path: registrar_pago
           method: ANY
+          
+  registrar_contacto_emergencia:
+    handler: userFunctions/registrar_emergencia.registrar_emergencia
+    events:
+      - http:
+          path: registrar_emergencia
+          method: ANY
   
   calcular_datos:
     handler: userFunctions/calcular_datos.calcular_datos
