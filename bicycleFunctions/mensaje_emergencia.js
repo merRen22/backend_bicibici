@@ -23,8 +23,7 @@ if (IS_OFFLINE) {
 
 app.use(bodyParser.json({ string: false }));
 
-
-app.post('/verificar_movimiento', (req, res) => {
+app.post('/mensaje_emergencia', async (req, res, next) =>  {
   var today = new Date();
   var bikeUpdated = false;
 
@@ -41,14 +40,14 @@ app.post('/verificar_movimiento', (req, res) => {
     }
   };
 
-  var latitude
-  var longitude 
-  var uuidUser
-  var email 
+  var latitude = 1
+  var longitude  = 2
+  var uuidUser = "asdasdas"
+  var email = "asdsa"
 
   await dynamoDB.query(parms, function (error, data) {
     if (error) {
-      //error de aws de sync
+      console.log("error"+ error)
     }
     else {
       latitude = data.Items[0].latitude
@@ -64,7 +63,7 @@ app.post('/verificar_movimiento', (req, res) => {
     TableName: TABLE_USERS
   };
 
-  dynamoDB.get(params,(error,result)=>{
+  await dynamoDB.get(params,(error,result)=>{
     if(error){
       console.log(error);
       res.status(400).json({
@@ -74,11 +73,9 @@ app.post('/verificar_movimiento', (req, res) => {
     }else{
         email = result.Item.emergencyContact
     }
-  });
+  }).promise();
 
   //Enviar correo
-
-  async function main() {
     // Generate test SMTP service account from ethereal.email
     // Only needed if you don't have a real mail account for testing
     let testAccount = await nodemailer.createTestAccount();
@@ -101,7 +98,7 @@ app.post('/verificar_movimiento', (req, res) => {
         subject: 'Hello ✔', // Subject line
         text: 'Hello world?', // plain text body
         html: '<b>Hello world?</b>' // html body
-    });
+    }).promise();
 
     console.log('Message sent: %s', info.messageId);
     // Message sent: <>
@@ -109,7 +106,7 @@ app.post('/verificar_movimiento', (req, res) => {
     // Preview only available when sending through an Ethereal account
     console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
     // Preview URL: https://ethereal.email/message/WaQKMgKddxQDoou...
-  }
-
-  main().catch(console.error);
 });
+
+
+module.exports.mensaje_emergencia = serverless(app);
