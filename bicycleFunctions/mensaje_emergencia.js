@@ -9,7 +9,6 @@ AWS.config.update({ region: 'us-east-1' });
 
 const TABLE_BIKES = process.env.TABLE_BIKES;
 const TABLE_USERS = process.env.TABLE_USERS;
-const TABLE_STATIONS = process.env.TABLE_STATIONS;
 const IS_OFFLINE = process.env.IS_OFFLINE;
 let dynamoDB;
 
