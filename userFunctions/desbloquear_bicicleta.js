@@ -24,6 +24,10 @@ if (IS_OFFLINE) {
 
 app.use(bodyParser.json({ string: false }));
 
+function updateBike(){
+  
+}
+
 app.post('/desbloquearBicicleta', async (req, res, next) => {
   var today = new Date();
   var bikeUpdated = false;
@@ -170,9 +174,7 @@ if(bikeUpdated)
   } else {
     //CREATE TRIP FOR USER
     //  [Date_time start,Date_time end,bike_id]
-    var _date = 
-    today.getDate()  + '/' + (today.getMonth() + 1) + '/' + today.getFullYear() + "|" + 
-    today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+    var _date = today.getDate()  + '/' + (today.getMonth() + 1) + '/' + today.getFullYear() + "|" + today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
     
     //Incluir el viaje del usuario
     //Incluir puntuacion del usuario
