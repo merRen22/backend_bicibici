@@ -32,7 +32,8 @@ exports.registrar_usuario = async function(event, context, callback){
             payments: {},
             activo: 0,
             experience: 0,
-            emergencyContact: "none"
+            emergencyContact: "none",
+            uuidBike: "none"
         }
     };
 

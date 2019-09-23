@@ -178,20 +178,13 @@ app.post('/finalizar_viaje', async (req, res, next) => {
         Key: {
           uuidUser: json.uuidUser,
         },
-        UpdateExpression: 'SET #mapName.#Trip =:StringSet',
+        UpdateExpression: 'SET #mapName.#Trip['+1+ '] =:StringSet',
         ExpressionAttributeNames: {
           '#mapName': 'trips',
           '#Trip': fecha_inicio
         },
         ExpressionAttributeValues: {
-          ':StringSet': [
-            json.uuidBike,
-            _date,
-            originLatitude,
-            originLongitude,
-            destinationLatitude,
-            destinationLongitude
-          ],
+          ':StringSet': _date
         }
       };
 
