@@ -148,7 +148,7 @@ async function changeStationsSlots(req)  {
   var paramsInitialStation ={
     TableName: TABLE_STATIONS,
     Key: {
-      uuidStation: uuidStation
+      uuidStation: req.uuidStation
     },
     UpdateExpression: 'SET #attr1 = #attr1 + :newvalue',
     ExpressionAttributeNames: {
@@ -167,7 +167,7 @@ async function changeStationsSlots(req)  {
   var parmsFinalStation ={
     TableName: TABLE_STATIONS,
     Key: {
-      uuidStation: req.uuidStation
+      uuidStation: uuidStation
     },
     UpdateExpression: 'SET #attr1 = #attr1 - :newvalue',
     ExpressionAttributeNames: {
