@@ -49,8 +49,18 @@ async function getBike(req){
     else {
       bikeAvailable = true;
       uuidStation = data.Items[0].uuidStation
+      
+      //distancia de usuario a bicicleta menor a 75 metros
+      if(geolib.getDistance(
+        {latitude: req.originLatitude,longitude: req.originLongitude},
+        {latitude: req.destinationLatitude,longitude: req.destinationLongitude}
+      )>25
+      ){
+        throw "La bicicleta solicitada se encuentra demasiado lejos";
+      }
     }
   }).promise();
+
 }
 
 //Update bike status
@@ -98,7 +108,7 @@ async function updateUser(req){
   let _date = today.getDate()  + '/' + (today.getMonth() + 1) + '/' + today.getFullYear() + "|" + today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
   let exp = geolib.getDistance(
     {latitude: req.originLatitude,longitude: req.originLongitude},
-    {latitude: req.destinationLatitude,longitude: req.destinationLongitude})/10;
+    {latitude: req.destinationLatitude,longitude: req.destinationLongitude})/10000;
     
   const paramsPutUser = {
     TableName: TABLE_USERS,
@@ -189,8 +199,8 @@ app.post('/desbloquearBicicleta', async (req, res, next) => {
     
   } catch (error) {
       console.error("error obtenido :: " + error);
-      res.status(400).json({
-        error: 'No se pudo acceder a la bicicleta, intentelo de nuevo'
+      res.status(200).json({
+        message: 'No se pudo acceder a la bicicleta, intentelo de nuevo'
       });
   }
 });

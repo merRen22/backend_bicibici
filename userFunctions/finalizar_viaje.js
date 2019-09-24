@@ -23,17 +23,12 @@ if (IS_OFFLINE) {
   dynamoDB = new AWS.DynamoDB.DocumentClient();
 }
 
-app.use(bodyParser.json({ string: false }));
+var fecha_inicio = "";
+var destinationLatitude = 0.0;
+var destinationLongitude = 0.0;
+var values;
 
-app.post('/finalizar_viaje', async (req, res, next) => {
-  var today = new Date();
-  var bikeUpdate = false;
-  var available = false
-  var uuidStation
-
-  //obtener uuid de la estacion final ----------------------------------
-  // y disponibilidad de la bicicleta
-  const json = JSON.parse(JSON.stringify(req.body));
+async function getBike(req){
   var parms ={
     TableName: TABLE_BIKES,
     KeyConditionExpression : "#uu = :uuidBike",
@@ -41,32 +36,60 @@ app.post('/finalizar_viaje', async (req, res, next) => {
       '#uu': 'uuidBike'
     },
     ExpressionAttributeValues: {
-      ':uuidBike': json.uuidBike
+      ':uuidBike': req.uuidBike
     }
   };
 
   await dynamoDB.query(parms, function (error, data) {
     if (error) {
       console.log(error)
-      //error de aws de sync
+      throw error;
     }
     else {
-      available = true;
-      uuidStation = data.Items[0].uuidStation
+      if(geolib.getDistance(
+        {latitude: req.latitude,longitude: req.longitude},
+        {latitude: data.Items[0].latitude,longitude: data.Items[0].longitude}
+      )>75
+      ){
+        throw "Usuario no se encuentra con la bicicleta";
+      }
     }
   }).promise();
+}
 
-  //--------------------------------------------------------------------
-  
-  if(available)
-  {
-      
-    // bici en movimiento ------------------------------------------------
-    // acutaliza rne movimiento y available
+async function getUser(req){
+  const paramsgetUser = {
+    Key: {
+      uuidUser: req.uuidUser
+    },
+    TableName: TABLE_USERS
+  };
+
+  await dynamoDB.get(paramsgetUser, (error, result) => {
+    if (error) {
+      console.log(error)
+      throw error;
+    }
+    else {
+      fecha_inicio = Object.keys(result.Item.trips)[Object.keys(result.Item.trips).length - 1];
+      values = Object.entries(result.Item.trips)[Object.keys(result.Item.trips).length - 1].toString().split(',');
+      destinationLatitude = values[5];
+      destinationLongitude = values[4];
+    }
+  }).promise();
+}
+
+async function updateBike(req){
+  if(
+    geolib.isPointWithinRadius(
+      { latitude: destinationLatitude, longitude: destinationLongitude },
+      { latitude: req.latitude, longitude: req.longitude },20
+      )
+  ){
     var parmsUpdateBike ={
       TableName: TABLE_BIKES,
       Key: {
-        uuidBike: json.uuidBike
+        uuidBike: req.uuidBike
       },
       UpdateExpression: 'SET #attr1 =:newAvailable, #attr2 =:newIsMoving',
       ExpressionAttributeNames: {
@@ -78,138 +101,69 @@ app.post('/finalizar_viaje', async (req, res, next) => {
         ':newIsMoving': 0
       }
     };
- 
 
-    var _date = today.getDate() + '/' + (today.getMonth() + 1) + '/' +today.getFullYear() + 
-    "|" + today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds()
-
-    const paramsgetUser = {
-      Key: {
-        uuidUser: json.uuidUser
-      },
-      TableName: TABLE_USERS
-    };
-
-    var fecha_inicio = "";
-    var originLatitude = 0.0;
-    var originLongitude = 0.0;
-    var destinationLatitude = 0.0;
-    var destinationLongitude = 0.0;
-    var values;
-    await dynamoDB.get(paramsgetUser, (error, result) => {
+    await dynamoDB.update(parmsUpdateBike, function (error, result) {
       if (error) {
-        console.log(error);
-        res.status(400).json({
-          error: 'No se ha podido acceder a los datos del usuario'
-        })
-      }
-      else {
-        fecha_inicio = Object.keys(result.Item.trips)[Object.keys(result.Item.trips).length - 1];
-        values = Object.entries(result.Item.trips)[Object.keys(result.Item.trips).length - 1].toString().split(',');
-        originLatitude = values[2];
-        originLongitude = values[3];
-        destinationLatitude = values[5];
-        destinationLongitude = values[4];
+        console.log(error)
+        throw error;
       }
     }).promise();
-
-
-    console.log("latitud destino " + destinationLatitude + " longitude " +  destinationLongitude)
-    console.log("latitud " + json.latitude + " longitude " +  json.longitude)
-    console.log("esta dentro de rango" + (
-      geolib.isPointWithinRadius(
-          { latitude: destinationLatitude, longitude: destinationLongitude },
-          { latitude: json.latitude, longitude: json.longitude },15
-          )).toString())
-
-    //revisar se enucntra cerca d ela posicion de destino
-    if(
-      geolib.isPointWithinRadius(
-          { latitude: destinationLatitude, longitude: destinationLongitude },
-          { latitude: json.latitude, longitude: json.longitude },15
-          )
-    ){
-      
- // aumentar slot
- var parmsUpdateStation ={
-  TableName: TABLE_STATIONS,
-  Key: {
-    uuidStation: uuidStation
-  },
-  UpdateExpression: 'SET #attr1 = #attr1 + :newvalue',
-  ExpressionAttributeNames: {
-    '#attr1': 'availableSlots'
-  },
-  ExpressionAttributeValues: {
-    ':newvalue': 1
+  }else{
+    throw "Usuario no se encuentra cerca de la estación";
   }
-};
+}
+
+async function updateUser(req){
+  var today = new Date();
+  var _date = today.getDate() + '/' + (today.getMonth() + 1) + '/' +today.getFullYear() + 
+  "|" + today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds()
+
+  const paramsPutUser = {
+    TableName: TABLE_USERS,
+    Key: {
+      uuidUser: req.uuidUser,
+    },
+    UpdateExpression: 'SET #mapName.#Trip['+1+'] =:StringSet, #attr2 =:NewValue2 ',
+    ExpressionAttributeNames: {
+      '#mapName': 'trips',
+      '#attr2': 'uuidBike',
+      '#Trip': fecha_inicio
+    },
+    ExpressionAttributeValues: {
+      ':StringSet': _date,
+      ':NewValue2':'none'
+    }
+  };
 
 
-  await dynamoDB.update(parmsUpdateStation, function (error, result) {
+  await dynamoDB.update(paramsPutUser, function (error, data) {
     if (error) {
       console.log(error)
+      throw error;
     }
   }).promise();
+  }
 
+app.use(bodyParser.json({ string: false }));
 
-      try {
-        await dynamoDB.update(parmsUpdateBike, function (error, result) {
-          if (error) {
-            console.log(error)
-          }
-          else {
-            this.bikeUpdated = true;
-          }
-        }).promise();
-      } catch (error) {
-        if (this.bikeUpdated == false) {
-          console.error("error obtenido :: " + error);
-          res.status(400).json({
-            error: 'No se pudo acceder a la bicicleta, intentelo de nuevo'
-          });
-        }
-      }
+app.post('/finalizar_viaje', async (req, res, next) => {
 
+  const json = JSON.parse(JSON.stringify(req.body));
+  
+    try {
+      await getBike(json);
+      await getUser(json);
+      await updateBike(json);
+      await updateUser(json);
       
-    if (fecha_inicio != "") {
-      const paramsPutUser = {
-        TableName: TABLE_USERS,
-        Key: {
-          uuidUser: json.uuidUser,
-        },
-        UpdateExpression: 'SET #mapName.#Trip['+1+ '] =:StringSet',
-        ExpressionAttributeNames: {
-          '#mapName': 'trips',
-          '#Trip': fecha_inicio
-        },
-        ExpressionAttributeValues: {
-          ':StringSet': _date
-        }
-      };
-
-      //UPDATE USER TRIPS
-      await dynamoDB.update(paramsPutUser, function (error, data) {
-        if (error) {
-          console.log(error);
-          res.status(400).json({
-            error: 'No se ha podido cerrar el viaje siga intentando por favor'
-          })
-        } else {
-          res.status(200).json({
-            message: 'Se dio por finalizado el viaje exitosamente'
-          })
-        }
-      }).promise();
-    }
-
-
-    }else{
       res.status(200).json({
-        message: 'No se encuentra en el estacionamiento'
-      })
-    }
-      
+        message: 'Se registro con exito el nuevo viaje'
+      });
+    } catch (error) {
+        console.error("error obtenido :: " + error);
+        res.status(200).json({
+          message: 'No se pudo acceder a la bicicleta, intentelo de nuevo'
+        });
     }
   }
 );

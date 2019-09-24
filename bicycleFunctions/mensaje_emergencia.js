@@ -71,34 +71,42 @@ app.post('/mensaje_emergencia', async (req, res, next) =>  {
         message: 'No se pudo obtener data del usuario',
       })
     }else{
+      console.log(result)
+      console.log(result.Item)
         email = result.Item.emergencyContact
     }
   }).promise();
-
+ 
   //Enviar correo
     // Generate test SMTP service account from ethereal.email
     // Only needed if you don't have a real mail account for testing
-    let testAccount = await nodemailer.createTestAccount();
-
+     let testAccount = await nodemailer.createTestAccount();
+    
+    
+    console.log(" prueba")
+    console.log(testAccount.user)
+    console.log(testAccount.pass)
+    console.log(email)
+    console.log(" prueba2")
     // create reusable transporter object using the default SMTP transport
-    let transporter = nodemailer.createTransport({
-        host: 'smtp.ethereal.email',
-        port: 587,
-        secure: false, // true for 465, false for other ports
+    let  transporter = nodemailer.createTransport({
+        host: 'smtp.gmail.com',
+        port: 465,
+        secure: true, // true for 465, false for other ports
         auth: {
-            user: testAccount.user, // generated ethereal user
-            pass: testAccount.pass // generated ethereal password
+            user: "bicibicifake@gmail.com" , // generated ethereal user
+            pass: "12345678bici"  // generated ethereal password
         }
     });
-
+    
     // send mail with defined transport object
-    let info = await transporter.sendMail({
-        from: '"Bici Bici Team 👻" <>', // sender address
+    let info =  await transporter.sendMail({
+        from: '"Bici Bici Team 👻" <admin@bicibici.com>', // sender address
         to: email, // list of receivers
-        subject: 'Hello ✔', // Subject line
-        text: 'Hello world?', // plain text body
-        html: '<b>Hello world?</b>' // html body
-    }).promise();
+        subject: 'Emergencia de contacto', // Subject linesubject: 'Emergencia de contacto', // Subject line
+        text: 'Hola tu contacto uuidUser tuvo un accicdente usando bicibici', // plain text body
+        html: '<b>Hola tu contacto '+ uuidUser +' tuvo un accicdente usando bicibici, puedes ver su ubicación en el siguiente enlace \n  http://maps.google.com/maps?q='+ latitude +','+ longitude + '</b>' // html body
+    });
 
     console.log('Message sent: %s', info.messageId);
     // Message sent: <>
