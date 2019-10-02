@@ -54,9 +54,14 @@ async function getBike(req){
       if(geolib.getDistance(
         {latitude: req.originLatitude,longitude: req.originLongitude},
         {latitude: req.destinationLatitude,longitude: req.destinationLongitude}
-      )>25
+      )>75
       ){
         throw "La bicicleta solicitada se encuentra demasiado lejos";
+      }
+      
+      //bicicelta no ha sido marcada estar en uso
+      if(data.Items[0].available == 1){
+        throw "La bicicleta se encuentra en uso actualmente";
       }
     }
   }).promise();
