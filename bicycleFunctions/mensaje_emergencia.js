@@ -94,8 +94,8 @@ app.post('/mensaje_emergencia', async (req, res, next) =>  {
         port: 465,
         secure: true, // true for 465, false for other ports
         auth: {
-            user: "bicibicifake@gmail.com" , // generated ethereal user
-            pass: "12345678bici"  // generated ethereal password
+            user: "SENDER_EMAIL" , // generated ethereal user
+            pass: "SENDER_PSW"  // generated ethereal password
         }
     });
     
